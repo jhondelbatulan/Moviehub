@@ -1,0 +1,21 @@
+# Simple .htaccess for Bike Rental System
+
+# Enable URL rewriting
+RewriteEngine On
+
+# Hide sensitive files
+<Files "db_connect.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "*.sql">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Prevent access to includes directory
+<Directory "includes">
+    Order Allow,Deny
+    Deny from all
+</Directory>

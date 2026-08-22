@@ -1,0 +1,416 @@
+[21-Aug-2026 14:08:30 Asia/Manila] Admin registration error: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'ADM-0001' for key 'employee_id'
+[21-Aug-2026 15:44:20 Asia/Manila] [OTP] PHPMailer error for jhondel.batulan@csucc.edu.ph: SMTP Error: Could not authenticate.
+[21-Aug-2026 19:20:04 Asia/Manila] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_table' in 'where clause' in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php:30
+Stack trace:
+#0 C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php(30): PDO->prepare('DELETE FROM aud...')
+#1 C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php(109): cleanup_admin('mhauditadmin')
+#2 {main}
+  thrown in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php on line 30
+[21-Aug-2026 19:20:04 Asia/Manila] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_table' in 'where clause' in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php:30
+Stack trace:
+#0 C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php(30): PDO->prepare('DELETE FROM aud...')
+#1 C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php(243): cleanup_admin('mhauditadmin')
+#2 {main}
+  thrown in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php on line 30
+[21-Aug-2026 19:20:22 Asia/Manila] PHP Warning:  session_regenerate_id(): Session ID cannot be regenerated after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\auth.php on line 72
+[21-Aug-2026 19:20:22 Asia/Manila] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\mh_audit.php:13) in C:\xampp\htdocs\Moviehub\includes\auth.php on line 99
+[21-Aug-2026 19:20:22 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\auth.php on line 102
+[21-Aug-2026 19:20:23 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\dashboard.php on line 2
+[21-Aug-2026 19:20:23 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\dashboard.php on line 2
+[21-Aug-2026 19:20:23 Asia/Manila] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\Moviehub\admin\dashboard.php on line 197
+[21-Aug-2026 19:20:23 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\rental_requests.php on line 2
+[21-Aug-2026 19:20:23 Asia/Manila] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\Moviehub\admin\rental_requests.php on line 162
+[21-Aug-2026 19:20:23 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\rental_requests.php on line 2
+[21-Aug-2026 19:20:23 Asia/Manila] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\Moviehub\admin\rental_requests.php on line 162
+[21-Aug-2026 19:21:18 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 19:21:18 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\dashboard.php on line 2
+[21-Aug-2026 19:21:18 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:18 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:18 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:18 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:19 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:19 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:19 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:19 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:19 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:21:19 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:22:23 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 19:22:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\profile.php on line 2
+[21-Aug-2026 19:22:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\logs.php on line 2
+[21-Aug-2026 19:22:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\dashboard.php on line 2
+[21-Aug-2026 19:22:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\manage_movies.php on line 2
+[21-Aug-2026 19:22:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\rental_requests.php on line 2
+[21-Aug-2026 19:22:25 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\manage_genres.php on line 2
+[21-Aug-2026 19:22:25 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\superadmin\dashboard.php on line 2
+[21-Aug-2026 19:22:25 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\superadmin\account_management.php on line 2
+[21-Aug-2026 19:22:25 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\superadmin\create_account.php on line 2
+[21-Aug-2026 19:22:25 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\dashboard.php on line 2
+[21-Aug-2026 19:22:26 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\manage_movies.php on line 2
+[21-Aug-2026 19:22:26 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\superadmin\dashboard.php on line 2
+[21-Aug-2026 19:27:23 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:27:23 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\movie_details.php on line 2
+[21-Aug-2026 19:27:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 19:27:24 Asia/Manila] PHP Warning:  Undefined array key "REQUEST_METHOD" in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 13
+[21-Aug-2026 19:27:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\profile.php on line 2
+[21-Aug-2026 19:27:24 Asia/Manila] PHP Warning:  Undefined array key "REQUEST_METHOD" in C:\xampp\htdocs\Moviehub\client\profile.php on line 31
+[21-Aug-2026 19:27:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\client\logs.php on line 2
+[21-Aug-2026 19:27:24 Asia/Manila] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\Moviehub\admin\dashboard.php on line 2
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  Undefined variable $expected_days in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\verify_ui.php on line 16
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  file_get_contents(C:/xampp/htdocs/Moviehub/client/client_register.tmp): Failed to open stream: No such file or directory in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\verify_ui.php on line 17
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 15
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:17 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\register.php on line 2
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\login.php on line 2
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\forgot_password.php on line 2
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\movies.php on line 2
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 19:53:42 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:04:13 Asia/Manila] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'full_name' in 'field list' in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\vf.php:18
+Stack trace:
+#0 C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\vf.php(18): PDO->exec('INSERT INTO use...')
+#1 {main}
+  thrown in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\vf.php on line 18
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:04:14 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:04:15 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 20:04:15 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:15 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:04:15 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:15 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 20:04:15 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:04:15 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:04:15 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:02 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:03 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\dashboard.php on line 2
+[21-Aug-2026 20:05:03 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:03 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:05:03 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:03 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 100
+[21-Aug-2026 20:05:03 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:05:03 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:03 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:18 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\register.php on line 2
+[21-Aug-2026 20:05:18 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:05:18 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:17:44 Asia/Manila] PHP Fatal error:  Uncaught ArgumentCountError: array_column() expects at least 2 arguments, 1 given in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\postercheck.php:37
+Stack trace:
+#0 C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\postercheck.php(37): array_column(Array)
+#1 {main}
+  thrown in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\postercheck.php on line 37
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\login_logs.php on line 2
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\login_logs.php on line 2
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  Undefined variable $pdo in C:\xampp\htdocs\Moviehub\admin\login_logs.php on line 42
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\logs.php on line 2
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:30:52 Asia/Manila] PHP Warning:  Undefined variable $pdo in C:\xampp\htdocs\Moviehub\client\logs.php on line 24
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\login_logs.php on line 2
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\login_logs.php on line 2
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\client\logs.php on line 2
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[21-Aug-2026 20:48:10 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:11 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:12 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 2
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 35
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 54
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\authorization.php on line 6
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 15
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\Moviehub\admin\registration_approval.php on line 253
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\Moviehub\includes\csrf.php on line 7
+[22-Aug-2026 08:55:13 Asia/Manila] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ra.admin_note_check' in 'field list' in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\apchk.php:94
+Stack trace:
+#0 C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\apchk.php(94): PDO->query('SELECT u.accoun...')
+#1 {main}
+  thrown in C:\Users\Dennis Casuco\AppData\Local\Temp\opencode\apchk.php on line 94
