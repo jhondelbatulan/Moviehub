@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = 'Invalid sex value.';
         } elseif (!in_array($role, ['user', 'admin', 'super_admin'], true)) {
             $error = 'Invalid role.';
-        } elseif (!in_array($account_status, ['active', 'blocked', 'pending', 'rejected'], true)) {
+        } elseif (!in_array($account_status, ['approved', 'blocked', 'pending', 'rejected', 'inactive'], true)) {
             $error = 'Invalid account status.';
         } else {
             try {
@@ -123,8 +123,8 @@ generate_csrf_token();
                 <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
                     <a href="account_management.php" class="sidebar-link active"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
                     <a href="create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
                     <a href="privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
+                    <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
                     <a href="deletion_requests.php" class="sidebar-link"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
                 </div>
                 <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
@@ -134,13 +134,13 @@ generate_csrf_token();
                     <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
                 </div>
             </nav>
-            <div class="sidebar-user">
+            <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name"><?php echo htmlspecialchars($_SESSION['admin_full_name']); ?></div>
                     <div class="sidebar-user-role" style="color:var(--primary);font-weight:600;">Super Admin</div>
                 </div>
-            </div>
+            </a>
         </aside>
 
         <div class="main-content">
@@ -209,15 +209,15 @@ generate_csrf_token();
                                 </div>
                                 <div class="form-group"><label>Account Status *</label>
                                     <select name="account_status" class="form-control" required>
-                                        <option value="active" <?php echo ($user['account_status'] ?? '') === 'active' ? 'selected' : ''; ?>>Active</option>
+                                        <option value="approved" <?php echo ($user['account_status'] ?? '') === 'approved' ? 'selected' : ''; ?>>Approved</option>
+                                        <option value="inactive" <?php echo ($user['account_status'] ?? '') === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
                                         <option value="blocked" <?php echo ($user['account_status'] ?? '') === 'blocked' ? 'selected' : ''; ?>>Blocked</option>
                                         <option value="pending" <?php echo ($user['account_status'] ?? '') === 'pending' ? 'selected' : ''; ?>>Pending</option>
                                         <option value="rejected" <?php echo ($user['account_status'] ?? '') === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
                                     </select>
                                 </div>
                             </div>
-                            <p class="text-muted text-sm"><i class="fas fa-lock"></i> Password cannot be changed from this page.</p>
-                            <div style="display:flex;gap:0.75rem;">
+                            <div style="display:flex;gap:0.75rem;margin-top:1rem;">
                                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
                                 <a href="account_management.php" class="btn btn-outline">Cancel</a>
                             </div>

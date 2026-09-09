@@ -82,24 +82,32 @@ generate_csrf_token();
     <?php require_once '../includes/footer.php'; ?>
 
     <script>
-    let cooldown = 60;
+    var _resendSeconds = 60;
+    var _resendTimerHandle = null;
+
     function startCooldown() {
-        const link = document.getElementById('resendLink');
-        const timer = document.getElementById('resendTimer');
+        var link = document.getElementById('resendLink');
+        var timer = document.getElementById('resendTimer');
+        if (_resendTimerHandle) clearInterval(_resendTimerHandle);
         link.style.display = 'none';
         timer.style.display = 'inline';
-        cooldown = 60;
-        function tick() {
-            if (cooldown > 0) {
-                timer.textContent = 'Resend in ' + cooldown + 's';
-                cooldown--;
-                setTimeout(tick, 1000);
+        var endTime = Date.now() + (_resendSeconds * 1000);
+        _resendTimerHandle = setInterval(function () {
+            var remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+            if (remaining > 0) {
+                timer.textContent = 'Resend in ' + remaining + 's';
             } else {
-                link.style.display = 'inline';
+                clearInterval(_resendTimerHandle);
+                _resendTimerHandle = null;
                 timer.style.display = 'none';
+                link.style.display = 'inline';
             }
+        }, 1000);
+        tickOnce();
+        function tickOnce() {
+            var remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+            timer.textContent = remaining > 0 ? 'Resend in ' + remaining + 's' : '';
         }
-        tick();
     }
     startCooldown();
 

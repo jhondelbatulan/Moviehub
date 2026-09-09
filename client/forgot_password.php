@@ -10,21 +10,24 @@ if (isset($_SESSION['user_id'])) { header('Location: dashboard.php'); exit(); }
 
 $error = '';
 $success = '';
+$masked_email = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = 'Invalid security token. Please try again.';
     } else {
-        $email = trim($_POST['email'] ?? '');
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Please enter a valid email address.';
+        $id_number = trim($_POST['id_number'] ?? '');
+        if ($id_number === '') {
+            $error = 'Please enter your ID number.';
+        } elseif (!preg_match('/^\d{4}-\d{4}$/', $id_number)) {
+            $error = 'ID number must be in the format xxxx-xxxx (e.g. 1234-5678).';
         } else {
             try {
-                $stmt = $pdo->prepare("SELECT id, email, CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE email = ? AND is_deleted = 0");
-                $stmt->execute([$email]);
+                $stmt = $pdo->prepare("SELECT id, email, CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE id_number = ? AND is_deleted = 0");
+                $stmt->execute([$id_number]);
                 $user = $stmt->fetch();
                 if (!$user) {
-                    $success = 'If an account with that email exists, an OTP has been sent.';
+                    $error = 'ID number doesn\'t exist.';
                 } else {
                     if (!can_resend_otp($pdo, 'users', $user['id'], 'password_reset')) {
                         $error = 'Too many OTP requests. Please wait before trying again.';
@@ -33,7 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $_SESSION['otp_user_id'] = $user['id'];
                         $_SESSION['otp_purpose'] = 'password_reset';
                         send_otp_email($user['email'], $otp, $user['full_name']);
-                        $success = 'An OTP has been sent to your email. It will expire in ' . OTP_EXPIRY_MINUTES . ' minutes.';
+                        $masked_email = mask_email($user['email']);
+                        $success = 'An OTP has been sent to your registered email (' . $masked_email . ').';
                         header('Location: verify_otp.php');
                         exit();
                     }
@@ -67,7 +71,7 @@ generate_csrf_token();
                 <h1>MovieHub</h1>
             </div>
             <h2 class="auth-title">Forgot Password</h2>
-            <p class="auth-subtitle">Enter your email to receive a reset code</p>
+            <p class="auth-subtitle">Enter your ID number to receive a reset code</p>
 
             <?php if ($error): ?>
                 <div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error); ?></div>
@@ -79,8 +83,12 @@ generate_csrf_token();
             <form method="POST" action="" class="auth-form">
                 <?php csrf_token_input(); ?>
                 <div class="form-group">
-                    <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter your registered email" required>
+                    <label for="id_number"><i class="fas fa-id-card"></i> ID Number</label>
+                    <div class="password-wrapper" style="position:relative;">
+                        <input type="password" id="id_number" name="id_number" class="form-control" placeholder="Enter your ID number (xxxx-xxxx)" required maxlength="9" autocomplete="off" inputmode="numeric" style="padding-right:2.5rem;">
+                        <button type="button" onclick="toggleIdNumber(this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <small style="font-size:0.75rem;color:var(--text-light);">The one-time code will be sent to the email registered to this ID number.</small>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-paper-plane"></i> Send OTP</button>
             </form>
@@ -92,5 +100,22 @@ generate_csrf_token();
     </div>
 
     <?php require_once '../includes/footer.php'; ?>
+
+    <script>
+    function toggleIdNumber(btn) {
+        var inp = btn.previousElementSibling;
+        var isPwd = inp.type === 'password';
+        inp.type = isPwd ? 'text' : 'password';
+        btn.querySelector('i').classList.toggle('fa-eye');
+        btn.querySelector('i').classList.toggle('fa-eye-slash');
+    }
+    document.getElementById('id_number').addEventListener('input', function (e) {
+        var v = e.target.value.replace(/[^\d-]/g, '');
+        var d = v.replace(/-/g, '');
+        if (d.length > 4) v = d.substring(0, 4) + '-' + d.substring(4, 8);
+        else v = d;
+        e.target.value = v;
+    });
+    </script>
 </body>
 </html>

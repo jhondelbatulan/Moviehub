@@ -60,6 +60,13 @@ try {
 } catch (PDOException $e) { $recent_movies = []; }
 
 generate_csrf_token();
+
+auto_inactivate_accounts($pdo);
+
+$show_edit_profile_notice = !empty($_SESSION['show_edit_profile_notice']);
+if ($show_edit_profile_notice) {
+    unset($_SESSION['show_edit_profile_notice']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -100,13 +107,13 @@ generate_csrf_token();
                     <a href="logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
                 </div>
             </nav>
-            <div class="sidebar-user">
+            <a href="../superadmin/edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name"><?php echo htmlspecialchars($_SESSION['admin_full_name']); ?></div>
                     <div class="sidebar-user-role"><?php echo ucfirst(str_replace('_', ' ', $_SESSION['admin_role'] ?? 'admin')); ?></div>
                 </div>
-            </div>
+            </a>
         </aside>
 
         <div class="main-content">
@@ -242,5 +249,24 @@ generate_csrf_token();
         function closeActionModal() { document.getElementById('actionModal').style.display = 'none'; }
         window.onclick = function(e) { if (e.target == document.getElementById('actionModal')) closeActionModal(); };
     </script>
+
+    <?php if ($show_edit_profile_notice): ?>
+    <div id="editProfileModal" class="modal" style="display:flex;">
+        <div class="modal-content" style="max-width:480px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-user-edit" style="margin-right:0.5rem;"></i> Update Your Account</h3>
+                <span class="close" onclick="document.getElementById('editProfileModal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Your password has been changed successfully. Please take a moment to review and update your account details, including your profile information and security questions.</p>
+                <div style="display:flex;gap:0.625rem;justify-content:flex-end;margin-top:1.25rem;">
+                    <button class="btn btn-outline" onclick="document.getElementById('editProfileModal').style.display='none'">Later</button>
+                    <a href="../superadmin/edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="btn btn-primary"><i class="fas fa-user-cog"></i> Edit My Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>document.getElementById('editProfileModal').addEventListener('click', function(e){ if(e.target === this) this.style.display='none'; });</script>
+    <?php endif; ?>
 </body>
 </html>

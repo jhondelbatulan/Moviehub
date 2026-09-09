@@ -20,6 +20,7 @@ if (!isset($_SESSION['login_attempts'])) { $_SESSION['login_attempts'] = 0; $_SE
 
 $error = '';
 $blocked = ($_SESSION['lockout_until'] > time());
+$showForgot = ($_SESSION['login_attempts'] >= 1);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -31,6 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
         if (empty($username) || empty($password)) {
             $error = 'Please fill in all fields.';
         } else {
+            $stmt = $pdo->prepare("SELECT account_status FROM users WHERE (username = ? OR id_number = ?) AND is_deleted = 0");
+            $stmt->execute([$username, $username]);
+            $existingUser = $stmt->fetch();
+            if ($existingUser && $existingUser['account_status'] === STATUS_BLOCKED) {
+                $error = 'Your account is blocked. Please contact support.';
+            } else {
             $result = $auth->login_user($username, $password);
             if ($result['success']) {
                 $_SESSION['login_attempts'] = 0;
@@ -46,7 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
                 if ($result2['success']) {
                     $_SESSION['login_attempts'] = 0;
                     $_SESSION['lockout_until'] = 0;
-                    if (($result2['role'] ?? '') === 'super_admin') {
+                    if (!empty($_SESSION['must_change_password'])) {
+                        header('Location: ../admin/change_password.php');
+                    } elseif (($result2['role'] ?? '') === 'super_admin') {
                         header('Location: ../superadmin/dashboard.php');
                     } else {
                         header('Location: ../admin/dashboard.php');
@@ -62,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
                     $blocked = true;
                 }
                 $error = $result['message'] ?? 'Invalid username or password.';
+            }
             }
         }
     }
@@ -114,8 +124,8 @@ generate_csrf_token();
             <form method="POST" action="" class="auth-form" id="loginForm">
                 <?php csrf_token_input(); ?>
                 <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required>
+                    <label for="username">Username or ID Number</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username or ID number" required>
                 </div>
 
                 <div class="form-group">
@@ -135,7 +145,9 @@ generate_csrf_token();
 
             <div class="auth-links">
                 <a href="register.php">Don't have an account? Register here</a>
-                <a href="forgot_password.php"><i class="fas fa-key"></i> Forgot your password?</a>
+                <?php if ($showForgot): ?>
+                    <a href="forgot_password.php"><i class="fas fa-key"></i> Forgot your password?</a>
+                <?php endif; ?>
                 <?php if ($blocked): ?>
                     <span id="lockoutTimer" style="display: inline-block; margin-left: 0.5rem; font-weight: 600; color: var(--info);"></span>
                 <?php endif; ?>

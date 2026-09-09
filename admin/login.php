@@ -31,6 +31,7 @@ if (!empty($_SESSION[$lockKey]) && $_SESSION[$lockKey] > time()) {
 }
 
 $error = '';
+$showForgot = ($_SESSION[$attemptKey] >= 1);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -46,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
             if ($result['success']) {
                 $_SESSION[$attemptKey] = 0;
                 $_SESSION[$lockKey] = 0;
-                if (($result['role'] ?? '') === 'super_admin') {
+                if (!empty($_SESSION['must_change_password'])) {
+                    header('Location: change_password.php');
+                } elseif (($result['role'] ?? '') === 'super_admin') {
                     header('Location: ../superadmin/dashboard.php');
                 } else {
                     header('Location: dashboard.php');
@@ -116,6 +119,10 @@ generate_csrf_token();
             </form>
 
             <div class="auth-links">
+                <?php if ($showForgot): ?>
+                    <a href="forgot_password.php"><i class="fas fa-key"></i> Forgot your password?</a>
+                <?php endif; ?>
+                <br>
                 <a href="../client/login.php"><i class="fas fa-arrow-left"></i> Back to Client Login</a>
             </div>
         </div>

@@ -118,8 +118,8 @@ generate_csrf_token();
                 <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
                     <a href="account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
                     <a href="create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
                     <a href="privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
+                    <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
                     <a href="deletion_requests.php" class="sidebar-link active"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
                 </div>
                 <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
@@ -129,13 +129,13 @@ generate_csrf_token();
                     <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
                 </div>
             </nav>
-            <div class="sidebar-user">
+            <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name"><?php echo htmlspecialchars($_SESSION['admin_full_name']); ?></div>
                     <div class="sidebar-user-role" style="color:var(--primary);font-weight:600;">Super Admin</div>
                 </div>
-            </div>
+            </a>
         </aside>
 
         <div class="main-content">

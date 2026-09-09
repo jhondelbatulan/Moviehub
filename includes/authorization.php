@@ -22,6 +22,13 @@ function require_login() {
         redirect($base . 'login.php');
     }
     $_SESSION['last_activity'] = time();
+
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    $is_change_pw = strpos($script, 'change_password.php') !== false;
+    if (!$is_change_pw && !empty($_SESSION['admin_id']) && !empty($_SESSION['must_change_password'])) {
+        $base = get_auth_redirect_base();
+        redirect($base . 'change_password.php');
+    }
 }
 
 function get_auth_redirect_base() {

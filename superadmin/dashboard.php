@@ -32,6 +32,13 @@ try {
 } catch (PDOException $e) { $recent_logins = []; }
 
 generate_csrf_token();
+
+$show_edit_profile_notice = !empty($_SESSION['show_edit_profile_notice']);
+if ($show_edit_profile_notice) {
+    unset($_SESSION['show_edit_profile_notice']);
+}
+
+auto_inactivate_accounts($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,10 +61,10 @@ generate_csrf_token();
                 <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
                     <a href="account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
                     <a href="create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
+                    <a href="privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
                     <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span>
                         <?php if ($pending_approvals > 0): ?><span class="badge badge-warning"><?php echo $pending_approvals; ?></span><?php endif; ?>
                     </a>
-                    <a href="privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
                     <a href="deletion_requests.php" class="sidebar-link">
                         <i class="fas fa-user-minus"></i><span>Deletion Requests</span>
                         <?php if ($pending_deletions > 0): ?><span class="badge badge-warning"><?php echo $pending_deletions; ?></span><?php endif; ?>
@@ -70,13 +77,13 @@ generate_csrf_token();
                     <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
                 </div>
             </nav>
-            <div class="sidebar-user">
+            <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name"><?php echo htmlspecialchars($_SESSION['admin_full_name']); ?></div>
                     <div class="sidebar-user-role" style="color:var(--primary);font-weight:600;">Super Admin</div>
                 </div>
-            </div>
+            </a>
         </aside>
 
         <div class="main-content">
@@ -162,5 +169,24 @@ generate_csrf_token();
     </div>
 
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.remove('active');"></div>
+
+    <?php if ($show_edit_profile_notice): ?>
+    <div id="editProfileModal" class="modal" style="display:flex;">
+        <div class="modal-content" style="max-width:480px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-user-edit" style="margin-right:0.5rem;"></i> Update Your Account</h3>
+                <span class="close" onclick="document.getElementById('editProfileModal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Your password has been changed successfully. Please take a moment to review and update your account details, including your profile information and security questions.</p>
+                <div style="display:flex;gap:0.625rem;justify-content:flex-end;margin-top:1.25rem;">
+                    <button class="btn btn-outline" onclick="document.getElementById('editProfileModal').style.display='none'">Later</button>
+                    <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="btn btn-primary"><i class="fas fa-user-cog"></i> Edit My Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>document.getElementById('editProfileModal').addEventListener('click', function(e){ if(e.target === this) this.style.display='none'; });</script>
+    <?php endif; ?>
 </body>
 </html>

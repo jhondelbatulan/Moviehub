@@ -11,12 +11,12 @@ class Auth {
 
     public function login_user($username, $password) {
         try {
-            $stmt = $this->pdo->prepare("SELECT id, username, password, first_name, last_name, email, role, account_status, employee_id FROM users WHERE username = ? AND is_deleted = 0");
-            $stmt->execute([$username]);
+            $stmt = $this->pdo->prepare("SELECT id, username, password, first_name, last_name, email, role, account_status, employee_id FROM users WHERE (username = ? OR id_number = ?) AND is_deleted = 0");
+            $stmt->execute([$username, $username]);
             $user = $stmt->fetch();
 
             if (!$user || !password_verify($password, $user['password'])) {
-                return ['success' => false, 'message' => 'Invalid username or password.'];
+                return ['success' => false, 'message' => 'Invalid username/ID or password.'];
             }
 
             if ($user['account_status'] === STATUS_BLOCKED) {
@@ -29,12 +29,21 @@ class Auth {
                 return ['success' => false, 'message' => 'Your registration has been rejected. Please contact support.'];
             }
 
+            if ($user['account_status'] === 'inactive') {
+                $stmt = $this->pdo->prepare("UPDATE users SET account_status = 'approved' WHERE id = ?");
+                $stmt->execute([$user['id']]);
+                record_status_change($this->pdo, 'users', $user['id'], 'inactive', 'approved', 'Reactivated on successful login');
+            }
+
+            $stmt = $this->pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+            $stmt->execute([$user['id']]);
+
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['full_name'] = trim($user['first_name'] . ' ' . $user['last_name']);
             $_SESSION['email'] = $user['email'];
             $_SESSION['user_role'] = $user['role'] ?? 'user';
-            $_SESSION['account_status'] = $user['account_status'];
+            $_SESSION['account_status'] = 'approved';
             $_SESSION['employee_id'] = $user['employee_id'] ?? null;
 
             session_regenerate_id(true);
@@ -49,7 +58,7 @@ class Auth {
 
     public function login_admin($username, $password) {
         try {
-            $stmt = $this->pdo->prepare("SELECT id, username, password, full_name, email, role, account_status, employee_id FROM admin_users WHERE username = ? AND is_deleted = 0");
+$stmt = $this->pdo->prepare("SELECT id, username, password, full_name, email, role, account_status, employee_id, must_change_password, last_login FROM admin_users WHERE username = ? AND is_deleted = 0");
             $stmt->execute([$username]);
             $admin = $stmt->fetch();
 
@@ -61,13 +70,29 @@ class Auth {
                 return ['success' => false, 'message' => 'Your account has been blocked. Please contact the Super Administrator.'];
             }
 
+            if ($admin['account_status'] === 'inactive') {
+                $stmt = $this->pdo->prepare("UPDATE admin_users SET account_status = 'active' WHERE id = ?");
+                $stmt->execute([$admin['id']]);
+                record_status_change($this->pdo, 'admin_users', $admin['id'], 'inactive', 'active', 'Reactivated on successful login');
+            }
+
+            $is_first_login = ($admin['last_login'] === null);
+
+            $stmt = $this->pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
+            $stmt->execute([$admin['id']]);
+
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_username'] = $admin['username'];
             $_SESSION['admin_full_name'] = $admin['full_name'];
             $_SESSION['admin_email'] = $admin['email'];
             $_SESSION['admin_role'] = $admin['role'];
             $_SESSION['admin_employee_id'] = $admin['employee_id'];
-            $_SESSION['account_status'] = $admin['account_status'];
+            $_SESSION['account_status'] = ($admin['account_status'] === 'inactive') ? 'active' : $admin['account_status'];
+$_SESSION['must_change_password'] = (int)($admin['must_change_password'] ?? 0);
+
+            if ($is_first_login) {
+                $_SESSION['show_edit_profile_notice'] = true;
+            }
 
             session_regenerate_id(true);
             log_login($this->pdo, 'admin_users', $admin['id'], $admin['username'], $admin['full_name'], $admin['role'], 'login', 'success', $admin['employee_id']);
@@ -83,6 +108,11 @@ class Auth {
         if (session_status() === PHP_SESSION_NONE) session_start();
 
         if (isset($_SESSION['admin_id'])) {
+            if (($_SESSION['admin_role'] ?? '') === 'super_admin') {
+                $stmt = $this->pdo->prepare("UPDATE admin_users SET account_status = 'inactive' WHERE id = ? AND account_status = 'active'");
+                $stmt->execute([$_SESSION['admin_id']]);
+                record_status_change($this->pdo, 'admin_users', $_SESSION['admin_id'], 'active', 'inactive', 'Set to inactive on logout');
+            }
             log_login($this->pdo, 'admin_users', $_SESSION['admin_id'], $_SESSION['admin_username'] ?? '', $_SESSION['admin_full_name'] ?? '', $_SESSION['admin_role'] ?? '', 'logout', 'success', $_SESSION['admin_employee_id'] ?? null);
         } elseif (isset($_SESSION['user_id'])) {
             $stmt = $this->pdo->prepare("SELECT username, CONCAT(first_name, ' ', last_name) as full_name, role, employee_id FROM users WHERE id = ?");
@@ -158,17 +188,31 @@ class Auth {
             if ($created_by_role !== 'super_admin') {
                 return ['success' => false, 'message' => 'Only Super Administrators can create admin accounts.'];
             }
-            $stmt = $this->pdo->prepare("SELECT id FROM admin_users WHERE username = ? OR email = ?");
-            $stmt->execute([$data['username'], $data['email']]);
-            if ($stmt->fetch()) return ['success' => false, 'message' => 'Username or email already exists.'];
+            $stmt = $this->pdo->prepare("SELECT id FROM admin_users WHERE username = ? OR email = ? OR id_number = ?");
+            $stmt->execute([$data['username'], $data['email'], $data['id_number'] ?? '']);
+            if ($stmt->fetch()) return ['success' => false, 'message' => 'Username, email, or ID number already exists.'];
 
             $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
             $emp_id = generate_employee_id($this->pdo, 'ADM');
-            $stmt = $this->pdo->prepare("INSERT INTO admin_users (username, email, password, full_name, role, account_status, employee_id, phone) VALUES (?,?,?,?,?,?,?,?)");
-            $stmt->execute([$data['username'], $data['email'], $hashed_password, $data['full_name'], $data['role'] ?? 'admin', STATUS_ACTIVE, $emp_id, $data['phone'] ?? null]);
 
-            return ['success' => true, 'message' => 'Administrator account created successfully.'];
+            $this->pdo->beginTransaction();
+            $stmt = $this->pdo->prepare("INSERT INTO admin_users (username, email, password, full_name, role, account_status, employee_id, id_number, phone, must_change_password) VALUES (?,?,?,?,?,?,?,?,?,1)");
+            $stmt->execute([$data['username'], $data['email'], $hashed_password, $data['full_name'], $data['role'] ?? 'admin', STATUS_ACTIVE, $emp_id, $data['id_number'] ?? null, $data['phone'] ?? null]);
+
+            $admin_id = $this->pdo->lastInsertId();
+            if (!empty($data['security_questions']) && is_array($data['security_questions'])) {
+                $sq_stmt = $this->pdo->prepare("INSERT INTO security_answers (user_table, user_id, question_id, answer_hash) VALUES ('admin_users', ?, ?, ?)");
+                foreach ($data['security_questions'] as $sq) {
+                    $answer = strtolower(trim($sq['answer']));
+                    $answer_hash = password_hash($answer, PASSWORD_DEFAULT);
+                    $sq_stmt->execute([$admin_id, (int)$sq['question_id'], $answer_hash]);
+                }
+            }
+            $this->pdo->commit();
+
+            return ['success' => true, 'message' => 'Administrator account created successfully. The new administrator must change their password on first login.'];
         } catch (PDOException $e) {
+            if ($this->pdo->inTransaction()) { $this->pdo->rollBack(); }
             error_log("Admin registration error: " . $e->getMessage());
             return ['success' => false, 'message' => 'Registration failed. Please try again.'];
         }

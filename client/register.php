@@ -159,6 +159,7 @@ generate_csrf_token();
         .sq-item input::placeholder{color:#8fa0b8;opacity:1;}
         .sq-item input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #1a2234 inset;-webkit-text-fill-color:#f1f5f9;}
         .reg-grid .form-group small{font-size:0.625rem;min-height:0.8em;display:block;line-height:1.2;color:var(--muted);}
+        .reg-grid .form-group .id-note{color:var(--primary);font-size:0.625rem;margin-top:0.1rem;min-height:0;}
         .sq-grid{display:grid;grid-template-columns:1fr;gap:0.6rem 1rem;}
         .sq-item{background:var(--background);border-radius:var(--radius);padding:0.6rem 0.75rem;}
         .sq-item label{font-size:0.75rem;font-weight:600;display:block;margin-bottom:0.25rem;}
@@ -200,7 +201,7 @@ generate_csrf_token();
                     <div class="reg-page active" id="page1">
                         <div class="reg-body">
                             <div class="reg-grid">
-                                <div class="form-group full"><label>ID Number *</label><input type="text" id="id_number" name="id_number" required placeholder="xxxx-xxxx" maxlength="9"><small id="idNumberStatus"></small></div>
+                                <div class="form-group full"><label>ID Number *</label><input type="text" id="id_number" name="id_number" required placeholder="xxxx-xxxx" maxlength="9"><small id="idNumberStatus"></small><small class="id-note"><i class="fas fa-info-circle"></i> Note: Remember your ID number, it will be used to login and reset your password.</small></div>
                                 <div class="form-group"><label>First Name *</label><input type="text" id="first_name" name="first_name" required><small id="firstNameStatus"></small></div>
                                 <div class="form-group"><label>Middle Initial</label><input type="text" id="middle_initial" name="middle_initial" maxlength="1"></div>
                                 <div class="form-group"><label>Last Name *</label><input type="text" id="last_name" name="last_name" required><small id="lastNameStatus"></small></div>

@@ -29,6 +29,26 @@ function redirect($url) {
     exit();
 }
 
+function mask_email($email) {
+    $parts = explode('@', $email);
+    if (count($parts) !== 2) return $email;
+    $name = $parts[0];
+    if (strlen($name) <= 2) {
+        $masked = substr($name, 0, 1) . str_repeat('*', max(0, strlen($name) - 1));
+    } else {
+        $masked = substr($name, 0, 2) . str_repeat('*', max(0, strlen($name) - 2));
+    }
+    $domain = $parts[1];
+    $dparts = explode('.', $domain);
+    if (count($dparts) >= 2) {
+        $tld = array_pop($dparts);
+        $domain_masked = substr(implode('.', $dparts), 0, 2) . '***.' . $tld;
+    } else {
+        $domain_masked = $domain;
+    }
+    return $masked . '@' . $domain_masked;
+}
+
 function is_logged_in() {
     return isset($_SESSION['user_id']) || isset($_SESSION['admin_id']);
 }
@@ -315,6 +335,43 @@ function unblock_account($pdo, $user_table, $user_id) {
     $stmt->execute([$new_status, $user_id]);
     record_status_change($pdo, $user_table, $user_id, 'blocked', $new_status);
 }
+
+function auto_inactivate_accounts($pdo) {
+    try {
+        $days = defined('AUTO_INACTIVE_DAYS') ? (int)AUTO_INACTIVE_DAYS : 30;
+        $cutoff = date('Y-m-d H:i:s', time() - ($days * 86400));
+
+        $admin_updated = 0;
+        $stmt = $pdo->prepare("SELECT id FROM admin_users WHERE account_status = 'active' AND (COALESCE(last_login, created_at) < ?)");
+        $stmt->execute([$cutoff]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $upd = $pdo->prepare("UPDATE admin_users SET account_status = 'inactive' WHERE id = ? AND account_status = 'active'");
+            $upd->execute([$row['id']]);
+            if ($upd->rowCount() > 0) {
+                record_status_change($pdo, 'admin_users', $row['id'], 'active', 'inactive', 'Automatically set to inactive (' . $days . ' days without login)');
+                $admin_updated++;
+            }
+        }
+
+        $user_updated = 0;
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE account_status = 'approved' AND (COALESCE(last_login, created_at) < ?)");
+        $stmt->execute([$cutoff]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $upd = $pdo->prepare("UPDATE users SET account_status = 'inactive' WHERE id = ? AND account_status = 'approved'");
+            $upd->execute([$row['id']]);
+            if ($upd->rowCount() > 0) {
+                record_status_change($pdo, 'users', $row['id'], 'approved', 'inactive', 'Automatically set to inactive (' . $days . ' days without login)');
+                $user_updated++;
+            }
+        }
+
+        return ['admins' => $admin_updated, 'users' => $user_updated];
+    } catch (PDOException $e) {
+        error_log("Auto-inactive error: " . $e->getMessage());
+        return ['admins' => 0, 'users' => 0];
+    }
+}
+
 
 function get_all_users_paginated($pdo, $filters = [], $per_page = 10, $page = 1) {
     $where = ["u.is_deleted = 0"]; $params = [];

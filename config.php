@@ -81,6 +81,7 @@ define('STATUS_APPROVED', 'approved');
 define('STATUS_REJECTED', 'rejected');
 define('STATUS_BLOCKED', 'blocked');
 define('STATUS_ACTIVE', 'active');
+define('STATUS_INACTIVE', 'inactive');
 
 // Lockout Configuration
 define('LOCKOUT_THRESHOLD', 3);
@@ -92,3 +93,6 @@ define('SECRET_QUESTIONS_MIN_CORRECT', 2);
 
 // OTP
 define('OTP_MAX_RESEND_PER_HOUR', 5);
+
+// Auto-Inactive: mark accounts inactive after this many days without login
+define('AUTO_INACTIVE_DAYS', 30);
