@@ -30,10 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $address_barangay = trim($_POST['address_barangay'] ?? '');
         $address_city = trim($_POST['address_city'] ?? '');
         $address_province = trim($_POST['address_province'] ?? '');
-        $address_country = trim($_POST['address_country'] ?? '');
+$address_country = trim($_POST['address_country'] ?? '');
         $zip_code = trim($_POST['zip_code'] ?? '');
-        $role = $_POST['role'] ?? '';
-        $account_status = $_POST['account_status'] ?? '';
+        $role_stmt = $pdo->prepare('SELECT role FROM users WHERE id = ? AND is_deleted = 0');
+        $role_stmt->execute([$user_id]);
+        $role = $role_stmt->fetchColumn();
+        if ($role === false) $error = 'User not found.';
 
         if ($first_name === '' || $last_name === '' || $email === '' || $birthdate === '' || $contact_number === '') {
             $error = 'Please fill in all required fields.';
@@ -41,10 +43,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = 'Invalid email address.';
         } elseif (!in_array($sex, ['Male', 'Female', 'Prefer not to say'], true)) {
             $error = 'Invalid sex value.';
-        } elseif (!in_array($role, ['user', 'admin', 'super_admin'], true)) {
-            $error = 'Invalid role.';
-        } elseif (!in_array($account_status, ['approved', 'blocked', 'pending', 'rejected', 'inactive'], true)) {
-            $error = 'Invalid account status.';
+        } elseif (($e = validate_name_field($first_name)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_name_field($last_name)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_middle_initial($middle_initial)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_extension_name($extension_name)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_birthdate($birthdate)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_ph_contact($contact_number)) !== '') {
+            $error = 'Contact number must be a valid Philippine mobile number (e.g. 0917-123-4567).';
+        } elseif (($e = validate_address_field($address_street, 'Street')) !== '') {
+            $error = $e;
+        } elseif (($e = validate_address_field($address_barangay, 'Barangay')) !== '') {
+            $error = $e;
+        } elseif (($e = validate_address_field($address_city, 'City')) !== '') {
+            $error = $e;
+        } elseif (($e = validate_address_field($address_province, 'Province')) !== '') {
+            $error = $e;
+        } elseif (($e = validate_address_field($address_country, 'Country')) !== '') {
+            $error = $e;
+        } elseif ($zip_code !== '' && (!ctype_digit($zip_code) || strlen($zip_code) < 4)) {
+            $error = 'Zip code must be a valid number (4+ digits).';
         } else {
             try {
                 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
@@ -52,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if ($stmt->fetch()) {
                     $error = 'That email address is already used by another account.';
                 } else {
-                    $stmt = $pdo->prepare("UPDATE users SET first_name = ?, middle_initial = ?, last_name = ?, extension_name = ?, sex = ?, birthdate = ?, email = ?, contact_number = ?, address_street = ?, address_barangay = ?, address_city = ?, address_province = ?, address_country = ?, zip_code = ?, role = ?, account_status = ? WHERE id = ?");
+                    $stmt = $pdo->prepare("UPDATE users SET first_name = ?, middle_initial = ?, last_name = ?, extension_name = ?, sex = ?, birthdate = ?, email = ?, contact_number = ?, address_street = ?, address_barangay = ?, address_city = ?, address_province = ?, address_country = ?, zip_code = ? WHERE id = ?");
                     $stmt->execute([
                         $first_name,
                         $middle_initial !== '' ? $middle_initial : null,
@@ -68,10 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $address_province !== '' ? $address_province : null,
                         $address_country !== '' ? $address_country : null,
                         $zip_code !== '' ? $zip_code : null,
-                        $role,
-                        $account_status,
                         $user_id
                     ]);
+                    log_audit($pdo, 'profile_update', 'users', $user_id, $first_name . ' ' . $last_name, 'User account details updated');
                     redirect('edit_user.php?id=' . $user_id . '&updated=1');
                 }
             } catch (PDOException $e) {
@@ -117,23 +138,8 @@ generate_csrf_token();
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="dashboard.php" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-                <div class="sidebar-section"><div class="sidebar-section-title">Overview</div>
-                    <a href="dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
-                    <a href="account_management.php" class="sidebar-link active"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
-                    <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
-                    <a href="deletion_requests.php" class="sidebar-link"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
-                    <a href="../admin/login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Account</div>
-                    <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -165,8 +171,7 @@ generate_csrf_token();
                     <div class="card-body">
                         <form method="POST" action="">
                             <?php csrf_token_input(); ?>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 1rem;">
-                                <div class="form-group"><label>Employee ID</label><input type="text" class="form-control" value="<?php echo htmlspecialchars($user['employee_id'] ?? ''); ?>" readonly disabled></div>
+<div style="display:grid;grid-template-columns:1fr;gap:0 1rem;">
                                 <div class="form-group"><label>ID Number</label><input type="text" class="form-control" value="<?php echo htmlspecialchars($user['id_number'] ?? ''); ?>" readonly disabled></div>
                             </div>
                             <div style="display:grid;grid-template-columns:2fr 1fr 2fr;gap:0 1rem;">
@@ -200,28 +205,52 @@ generate_csrf_token();
                                 <div class="form-group"><label>Zip Code</label><input type="text" name="zip_code" class="form-control" maxlength="10" value="<?php echo htmlspecialchars($user['zip_code'] ?? ''); ?>"></div>
                             </div>
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 1rem;">
-                                <div class="form-group"><label>Role *</label>
-                                    <select name="role" class="form-control" required>
-                                        <option value="user" <?php echo ($user['role'] ?? 'user') === 'user' ? 'selected' : ''; ?>>User</option>
-                                        <option value="admin" <?php echo ($user['role'] ?? '') === 'admin' ? 'selected' : ''; ?>>Admin</option>
-                                        <option value="super_admin" <?php echo ($user['role'] ?? '') === 'super_admin' ? 'selected' : ''; ?>>Super Admin</option>
-                                    </select>
-                                </div>
-                                <div class="form-group"><label>Account Status *</label>
-                                    <select name="account_status" class="form-control" required>
-                                        <option value="approved" <?php echo ($user['account_status'] ?? '') === 'approved' ? 'selected' : ''; ?>>Approved</option>
-                                        <option value="inactive" <?php echo ($user['account_status'] ?? '') === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                                        <option value="blocked" <?php echo ($user['account_status'] ?? '') === 'blocked' ? 'selected' : ''; ?>>Blocked</option>
-                                        <option value="pending" <?php echo ($user['account_status'] ?? '') === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                        <option value="rejected" <?php echo ($user['account_status'] ?? '') === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
-                                    </select>
-                                </div>
+                                <div class="form-group"><label>Role</label><input type="text" class="form-control" value="<?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $user['role'] ?? 'user'))); ?>" readonly disabled></div>
+<div class="form-group"><label>Account Status</label><input type="text" class="form-control" value="<?php echo htmlspecialchars(ucfirst($user['account_status'] ?? '')); ?>" readonly disabled></div>
+                                <div class="form-group"><label>Age</label><input type="text" id="ageDisplay" class="form-control" readonly value="<?php echo $user['birthdate'] ? (compute_age($user['birthdate']) . ' years') : ''; ?>" placeholder="Auto-computed from birthdate"></div>
                             </div>
                             <div style="display:flex;gap:0.75rem;margin-top:1rem;">
                                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
                                 <a href="account_management.php" class="btn btn-outline">Cancel</a>
                             </div>
                         </form>
+                        <script>
+                        (function () {
+                            var bd = document.getElementsByName('birthdate')[0], age = document.getElementById('ageDisplay');
+                            if (!bd || !age) return;
+                            function upd() {
+                                var d = bd.value;
+                                if (!d) { age.value = ''; return; }
+                                var b = new Date(d), n = new Date(), y = n.getFullYear() - b.getFullYear(), m = n.getMonth() - b.getMonth();
+                                if (m < 0 || (m === 0 && n.getDate() < b.getDate())) y--;
+                                age.value = (y >= 0 && y < 200) ? y + ' years' : '';
+                            }
+                            bd.addEventListener('input', upd);
+                        })();
+                        </script>
+                        <script>
+                        (function () {
+                            function nameOk(v) {
+                                v = v.trim();
+                                if (!v) return false;
+                                if (v.length < 2 || v.length > 30) return false;
+                                if (!/^[A-Z][a-z]+(?: [A-Z][a-z]+)*$/.test(v)) return false;
+                                if (/^[A-Z]+$/.test(v)) return false;
+                                if (/[0-9]/.test(v) || /[^A-Za-z ]/.test(v)) return false;
+                                if (/(.)\1{2,}/.test(v)) return false;
+                                return true;
+                            }
+                            function phOk(v) { v = v.trim(); var n = v.replace(/[^0-9]/g, ''); if (n.indexOf('63') === 0) n = n.substring(2); if (n.indexOf('0') === 0) n = n.substring(1); return /^9\d{9}$/.test(n); }
+                            var fn = document.getElementsByName('first_name')[0], ln = document.getElementsByName('last_name')[0], cn = document.getElementsByName('contact_number')[0];
+                            var fnS = document.createElement('small'), lnS = document.createElement('small'), cnS = document.createElement('small');
+                            [fnS, lnS, cnS].forEach(function (s) { s.style.display = 'block'; s.style.fontSize = '0.6875rem'; s.style.minHeight = '0.9em'; });
+                            fn.parentNode.appendChild(fnS); ln.parentNode.appendChild(lnS); cn.parentNode.appendChild(cnS);
+                            function set(el, ok, msg) { el.textContent = msg; el.style.color = ok ? 'var(--success)' : 'var(--danger)'; }
+                            fn.addEventListener('input', function () { var v = this.value.trim(); nameOk(v) ? set(fnS, true, 'Valid') : set(fnS, false, v ? 'First letter capital, rest lowercase, no numbers/special chars.' : ''); });
+                            ln.addEventListener('input', function () { var v = this.value.trim(); nameOk(v) ? set(lnS, true, 'Valid') : set(lnS, false, v ? 'First letter capital, rest lowercase, no numbers/special chars.' : ''); });
+                            cn.addEventListener('input', function () { var v = this.value.trim(); phOk(v) ? set(cnS, true, 'Valid') : set(cnS, false, v ? 'Use PH format, e.g. 0917-123-4567' : ''); });
+                        })();
+                        </script>
                     </div>
                 </div>
                 <?php else: ?>

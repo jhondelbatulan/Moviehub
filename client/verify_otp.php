@@ -11,6 +11,7 @@ if (empty($_SESSION['otp_user_id']) || empty($_SESSION['otp_purpose'])) {
     exit();
 }
 
+$user_table = $_SESSION['otp_user_table'] ?? 'users';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -21,10 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($otp_input === '' || strlen($otp_input) !== OTP_LENGTH) {
             $error = 'Please enter a valid ' . OTP_LENGTH . '-digit OTP.';
         } else {
-            $result = verify_otp($pdo, 'users', $_SESSION['otp_user_id'], $otp_input, $_SESSION['otp_purpose']);
+            $result = verify_otp($pdo, $user_table, $_SESSION['otp_user_id'], $otp_input, $_SESSION['otp_purpose']);
             if ($result['success']) {
                 $_SESSION['reset_verified_user_id'] = $_SESSION['otp_user_id'];
-                unset($_SESSION['otp_user_id'], $_SESSION['otp_purpose']);
+                $_SESSION['reset_verified_user_table'] = $user_table;
+                $_SESSION['reset_masked_id_number'] = $_SESSION['otp_masked_id_number'] ?? ($_SESSION['reset_masked_id_number'] ?? '****-****');
+                $_SESSION['reset_masked_email'] = $_SESSION['otp_masked_email'] ?? ($_SESSION['reset_masked_email'] ?? '');
+                unset($_SESSION['otp_user_id'], $_SESSION['otp_user_table'], $_SESSION['otp_purpose'], $_SESSION['otp_masked_id_number'], $_SESSION['otp_masked_email']);
                 header('Location: verify_security_after_otp.php');
                 exit();
             } else {
@@ -57,8 +61,15 @@ generate_csrf_token();
             <h2 class="auth-title">Verify OTP</h2>
             <p class="auth-subtitle">Enter the <?php echo OTP_LENGTH; ?>-digit code sent to your email</p>
 
-            <?php if ($error): ?>
+<?php if ($error): ?>
                 <div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+
+            <?php if (!empty($_SESSION['otp_masked_id_number'])): ?>
+            <div class="alert alert-info" style="font-size:0.8125rem;display:flex;flex-direction:column;gap:0.25rem;">
+                <span><i class="fas fa-id-card"></i> ID Number: <strong><?php echo htmlspecialchars($_SESSION['otp_masked_id_number']); ?></strong></span>
+                <span><i class="fas fa-envelope"></i> Email: <strong><?php echo htmlspecialchars($_SESSION['otp_masked_email']); ?></strong></span>
+            </div>
             <?php endif; ?>
 
             <form method="POST" action="" class="auth-form">

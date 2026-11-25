@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($result['success']) {
                 $_SESSION['reset_verified_user_id'] = $_SESSION['otp_user_id'];
                 $_SESSION['reset_verified_user_table'] = $user_table;
-                unset($_SESSION['otp_user_id'], $_SESSION['otp_user_table'], $_SESSION['otp_purpose']);
+                unset($_SESSION['otp_user_id'], $_SESSION['otp_user_table'], $_SESSION['otp_purpose'], $_SESSION['otp_masked_id_number'], $_SESSION['otp_masked_email']);
                 header('Location: verify_security_after_otp.php');
                 exit();
             } else {
@@ -58,6 +58,13 @@ generate_csrf_token();
 
             <?php if ($error): ?>
                 <div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+
+            <?php if (!empty($_SESSION['otp_masked_id_number'])): ?>
+            <div class="alert alert-info" style="font-size:0.8125rem;display:flex;flex-direction:column;gap:0.25rem;">
+                <span><i class="fas fa-id-card"></i> ID Number: <strong><?php echo htmlspecialchars($_SESSION['otp_masked_id_number']); ?></strong></span>
+                <span><i class="fas fa-envelope"></i> Email: <strong><?php echo htmlspecialchars($_SESSION['otp_masked_email']); ?></strong></span>
+            </div>
             <?php endif; ?>
 
             <form method="POST" action="" class="auth-form">

@@ -2,6 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 require_once '../db_connect.php';
+require_once '../includes/functions.php';
 
 $email = isset($_GET['email']) ? trim($_GET['email']) : '';
 if ($email === '') {
@@ -10,9 +11,7 @@ if ($email === '') {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT 1 FROM users WHERE email = ? LIMIT 1");
-    $stmt->execute([$email]);
-    $exists = (bool)$stmt->fetchColumn();
+    $exists = email_taken($pdo, $email);
     echo json_encode(['ok' => true, 'available' => !$exists]);
 } catch (Throwable $e) {
     http_response_code(500);

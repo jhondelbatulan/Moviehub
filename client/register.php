@@ -4,6 +4,7 @@ require_once '../config.php';
 require_once '../db_connect.php';
 require_once '../includes/functions.php';
 require_once '../includes/auth.php';
+require_once '../includes/otp.php';
 require_once '../includes/csrf.php';
 
 $auth = new Auth($pdo);
@@ -15,7 +16,7 @@ $success = '';
 
 $secret_questions = [];
 try {
-    $stmt = $pdo->query("SELECT id, question_text FROM secret_questions ORDER BY id");
+    $stmt = $pdo->query("SELECT id, question_text FROM secret_questions WHERE is_active = 1 AND id IN (1, 2, 3) ORDER BY sort_order, id");
     $secret_questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) { error_log('[register] Failed to load questions: '.$e->getMessage()); }
 
@@ -48,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $no_three = '/^(?:(.)(?!.*?\1\1\1))/';
         $all_caps = '/^[A-Z]+$/';
         $has_upper_after = '/[A-Z]/';
-        $usernamePattern = '/^[A-Za-z][A-Za-z0-9_]{7,29}$/';
+        $usernamePattern = '/^[A-Za-z](?=[A-Za-z0-9._]*[._0-9])[A-Za-z0-9._]{5,29}$/';
         $idNumberPattern = '/^\d{4}-\d{4}$/';
         $valid_ext = '/^(?:Jr\.?|Sr\.?|II|III|IV|V|VI|VII|VIII|IX|X)$/i';
         $valid = true;
@@ -73,11 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         elseif ($contact_number === '') { $error = 'Contact number required.'; $valid = false; }
         elseif ($street === '' || $barangay === '' || $city === '' || $province === '' || $country === '') { $error = 'All address fields are required.'; $valid = false; }
         elseif ($zip_code === '' || !ctype_digit($zip_code) || strlen($zip_code) < 4) { $error = 'Valid ZIP code required (min 4 digits).'; $valid = false; }
-        elseif ($username === '' || !preg_match($usernamePattern, $username)) { $error = 'Username must start with letter, 8-30 chars (letters/numbers/underscore).'; $valid = false; }
+        elseif ($username === '' || !preg_match($usernamePattern, $username)) { $error = 'Username must start with a letter, 6-30 characters, using only letters, numbers, dots (.) or underscores (_), and must contain at least one dot, underscore, or number (e.g. user.jhondel, ai_chou, jamesmillare123).'; $valid = false; }
         elseif ($password !== $confirm_password) { $error = 'Passwords do not match.'; $valid = false; }
         elseif (strlen($password) < 8 || strlen($password) > 30) { $error = 'Password must be 8-30 characters.'; $valid = false; }
         elseif (in_array('', $sq_ids, true) || in_array('', $sq_answers, true)) { $error = 'All 3 security questions and answers are required.'; $valid = false; }
         elseif (count(array_unique($sq_ids)) !== 3) { $error = 'Security questions must be different.'; $valid = false; }
+        elseif (!security_question_ids_are_valid($pdo, $sq_ids)) { $error = 'Choose three different active security questions.'; $valid = false; }
 
         if ($valid) {
             $data = [
@@ -106,15 +108,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     'answer' => $sq_answers[$i],
                 ];
             }
-            $result = $auth->register_user($data);
-            if ($result['success']) {
-                $success = $result['message'];
+
+            // Surface duplicate errors before sending the OTP so the user
+            // does not have to verify an email for an unusable registration.
+            $dup = username_taken($pdo, $username);
+            if ($dup) {
+                $error = 'Username is already taken. Please choose another one.';
             } else {
-                $error = $result['message'];
+                if (email_taken($pdo, $email)) {
+                    $error = 'An account with this email address already exists.';
+                } else {
+                    // The account is NOT created yet. Hold the registration in
+                    // the session and require email OTP verification first;
+                    // Auth::register_user() (which also submits the approval
+                    // request) runs only after the OTP is confirmed.
+                    $otp_key = (int)sprintf('%u', crc32(strtolower($email)));
+                    if (!can_resend_otp($pdo, 'users', $otp_key, 'verification')) {
+                        $error = 'Too many OTP requests for this email. Please wait before trying again.';
+                    } else {
+                        $otp = create_otp($pdo, 'users', $otp_key, 'verification');
+                        $_SESSION['pending_registration'] = $data;
+                        $_SESSION['pending_registration_otp_key'] = $otp_key;
+                        $_SESSION['pending_registration_email'] = $email;
+                        $_SESSION['pending_reg_otp_sent_at'] = time();
+                        send_otp_email($email, $otp, $first_name . ' ' . $last_name, 'verification');
+                        header('Location: verify_registration_otp.php');
+                        exit();
+                    }
+                }
             }
         }
     }
 }
+$old = ($error !== '' && $_SERVER['REQUEST_METHOD'] === 'POST') ? $_POST : [];
 generate_csrf_token();
 ?>
 <!DOCTYPE html>
@@ -194,31 +220,31 @@ generate_csrf_token();
 
                 <form method="POST" action="" novalidate id="regForm">
                     <?php csrf_token_input(); ?>
-                    <input type="hidden" name="sq1_id" id="sq1_id" value="">
-                    <input type="hidden" name="sq2_id" id="sq2_id" value="">
-                    <input type="hidden" name="sq3_id" id="sq3_id" value="">
+                    <input type="hidden" name="sq1_id" id="sq1_id" value="<?php echo htmlspecialchars($old['sq1_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="hidden" name="sq2_id" id="sq2_id" value="<?php echo htmlspecialchars($old['sq2_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="hidden" name="sq3_id" id="sq3_id" value="<?php echo htmlspecialchars($old['sq3_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
 
                     <div class="reg-page active" id="page1">
                         <div class="reg-body">
                             <div class="reg-grid">
-                                <div class="form-group full"><label>ID Number *</label><input type="text" id="id_number" name="id_number" required placeholder="xxxx-xxxx" maxlength="9"><small id="idNumberStatus"></small><small class="id-note"><i class="fas fa-info-circle"></i> Note: Remember your ID number, it will be used to login and reset your password.</small></div>
-                                <div class="form-group"><label>First Name *</label><input type="text" id="first_name" name="first_name" required><small id="firstNameStatus"></small></div>
-                                <div class="form-group"><label>Middle Initial</label><input type="text" id="middle_initial" name="middle_initial" maxlength="1"></div>
-                                <div class="form-group"><label>Last Name *</label><input type="text" id="last_name" name="last_name" required><small id="lastNameStatus"></small></div>
-                                <div class="form-group"><label>Extension</label><input type="text" id="extension_name" name="extension_name" placeholder="Jr, Sr, III"><small id="extensionStatus"></small></div>
-                                <div class="form-group"><label>Sex *</label><select id="sex" name="sex" required><option value="" disabled selected>Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Prefer not to say">Prefer not to say</option></select></div>
-                                <div class="form-group"><label>Birthdate *</label><input type="date" id="birthdate" name="birthdate" required></div>
+                                <div class="form-group full"><label>ID Number</label><input type="text" id="id_number" name="id_number" required placeholder="xxxx-xxxx" maxlength="9" value="<?php echo htmlspecialchars($old['id_number'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" readonly aria-readonly="true"><small id="idNumberStatus"></small><small class="id-note"><i class="fas fa-info-circle"></i> Your ID number is generated automatically and cannot be changed. Remember it for login and password recovery.</small></div>
+                                <div class="form-group"><label>First Name *</label><input type="text" id="first_name" name="first_name" required value="<?php echo htmlspecialchars($old['first_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><small id="firstNameStatus"></small></div>
+                                <div class="form-group"><label>Middle Initial</label><input type="text" id="middle_initial" name="middle_initial" maxlength="1" value="<?php echo htmlspecialchars($old['middle_initial'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></div>
+                                <div class="form-group"><label>Last Name *</label><input type="text" id="last_name" name="last_name" required value="<?php echo htmlspecialchars($old['last_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><small id="lastNameStatus"></small></div>
+                                <div class="form-group"><label>Extension</label><input type="text" id="extension_name" name="extension_name" placeholder="Jr, Sr, III" value="<?php echo htmlspecialchars($old['extension_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><small id="extensionStatus"></small></div>
+                                <div class="form-group"><label>Sex *</label><select id="sex" name="sex" required><option value="" disabled <?php echo empty($old['sex']) ? 'selected' : ''; ?>>Select</option><option value="Male" <?php echo ($old['sex'] ?? '') === 'Male' ? 'selected' : ''; ?>>Male</option><option value="Female" <?php echo ($old['sex'] ?? '') === 'Female' ? 'selected' : ''; ?>>Female</option><option value="Prefer not to say" <?php echo ($old['sex'] ?? '') === 'Prefer not to say' ? 'selected' : ''; ?>>Prefer not to say</option></select></div>
+                                <div class="form-group"><label>Birthdate *</label><input type="date" id="birthdate" name="birthdate" required value="<?php echo htmlspecialchars($old['birthdate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></div>
                                 <div class="form-group"><label>Age</label><input type="number" id="age" readonly></div>
-                                <div class="form-group"><label>Contact Number *</label><input type="tel" id="contact_number" name="contact_number" required><small id="contactStatus"></small></div>
+                                <div class="form-group"><label>Contact Number *</label><input type="tel" id="contact_number" name="contact_number" required value="<?php echo htmlspecialchars($old['contact_number'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><small id="contactStatus"></small></div>
                                 <div class="form-group full" style="margin-top:0.15rem;"><label style="font-weight:600;color:var(--secondary);font-size:0.75rem;"><i class="fas fa-map-marker-alt"></i> Address</label></div>
-                                <div class="form-group span3"><label>Purok/Street *</label><input type="text" id="address_street" name="address_street" required></div>
-                                <div class="form-group"><label>Barangay *</label><input type="text" id="address_barangay" name="address_barangay" required></div>
-                                <div class="form-group"><label>Municipal/City *</label><input type="text" id="address_city" name="address_city" required></div>
-                                <div class="form-group"><label>Province *</label><input type="text" id="address_province" name="address_province" required></div>
-                                <div class="form-group"><label>Country *</label><input type="text" id="address_country" name="address_country" required></div>
-                                <div class="form-group"><label>ZIP Code *</label><input type="text" id="zip_code" name="zip_code" inputmode="numeric" maxlength="6" required><small id="zipStatus"></small></div>
-                                <div class="form-group"><label>Email *</label><input type="email" id="email" name="email" required><small id="emailStatus"></small></div>
-                                <div class="form-group"><label>Username *</label><input type="text" id="username" name="username" required autocomplete="off"><small id="usernameStatus"></small></div>
+                                <div class="form-group span3"><label>Purok/Street *</label><input type="text" id="address_street" name="address_street" required value="<?php echo htmlspecialchars($old['address_street'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></div>
+                                <div class="form-group"><label>Barangay *</label><input type="text" id="address_barangay" name="address_barangay" required value="<?php echo htmlspecialchars($old['address_barangay'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></div>
+                                <div class="form-group"><label>Municipal/City *</label><input type="text" id="address_city" name="address_city" required value="<?php echo htmlspecialchars($old['address_city'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></div>
+                                <div class="form-group"><label>Province *</label><input type="text" id="address_province" name="address_province" required value="<?php echo htmlspecialchars($old['address_province'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></div>
+                                <div class="form-group"><label>Country *</label><input type="text" id="address_country" name="address_country" required value="<?php echo htmlspecialchars($old['address_country'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></div>
+                                <div class="form-group"><label>ZIP Code *</label><input type="text" id="zip_code" name="zip_code" inputmode="numeric" maxlength="6" required value="<?php echo htmlspecialchars($old['zip_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><small id="zipStatus"></small></div>
+                                <div class="form-group"><label>Email *</label><input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($old['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><small id="emailStatus"></small></div>
+                                <div class="form-group"><label>Username *</label><input type="text" id="username" name="username" required autocomplete="off" value="<?php echo htmlspecialchars($old['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><small id="usernameStatus"></small></div>
                                 <div class="form-group"><label>Password *</label><div style="position:relative;"><input type="password" id="password" name="password" required autocomplete="new-password" style="padding-right:1.8rem;"><button type="button" onclick="togglePass('password',this)" class="pw-toggle" aria-label="Toggle password"><i class="fas fa-eye"></i></button></div><small id="passwordStrength"></small></div>
                                 <div class="form-group"><label>Confirm Password *</label><div style="position:relative;"><input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password" style="padding-right:1.8rem;"><button type="button" onclick="togglePass('confirm_password',this)" class="pw-toggle" aria-label="Toggle password"><i class="fas fa-eye"></i></button></div><small id="confirmStatus"></small></div>
                             </div>
@@ -236,26 +262,26 @@ generate_csrf_token();
                                 <div class="sq-item">
                                     <label><i class="fas fa-shield-alt" style="color:var(--primary);"></i> Security Question 1 *</label>
                                     <select name="sq1_raw" id="sq1_raw" class="form-control" required style="height:28px;font-size:0.75rem;margin-bottom:0.25rem;" onchange="syncHiddenId(this,'sq1_id')">
-                                        <option value="" disabled selected>Select a question</option>
-                                        <?php foreach ($secret_questions as $q): ?><option value="<?php echo $q['id']; ?>"><?php echo htmlspecialchars($q['question_text']); ?></option><?php endforeach; ?>
+                                        <option value="" disabled <?php echo empty($old['sq1_raw']) ? 'selected' : ''; ?>>Select a question</option>
+                                        <?php foreach ($secret_questions as $q): ?><option value="<?php echo $q['id']; ?>" <?php echo (string)($old['sq1_raw'] ?? '') === (string)$q['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($q['question_text']); ?></option><?php endforeach; ?>
                                     </select>
-                                    <input type="text" name="sa1" class="form-control" placeholder="Your answer" required style="height:28px;font-size:0.75rem;">
+                                    <div style="position:relative;"><input type="password" name="sa1" id="sa1" class="form-control" placeholder="Your answer" required autocomplete="new-password" style="height:28px;font-size:0.75rem;padding-right:1.8rem;"><button type="button" onclick="togglePass('sa1',this)" class="pw-toggle" aria-label="Toggle answer"><i class="fas fa-eye"></i></button></div>
                                 </div>
                                 <div class="sq-item">
                                     <label><i class="fas fa-shield-alt" style="color:var(--primary);"></i> Security Question 2 *</label>
                                     <select name="sq2_raw" id="sq2_raw" class="form-control" required style="height:28px;font-size:0.75rem;margin-bottom:0.25rem;" onchange="syncHiddenId(this,'sq2_id')">
-                                        <option value="" disabled selected>Select a question</option>
-                                        <?php foreach ($secret_questions as $q): ?><option value="<?php echo $q['id']; ?>"><?php echo htmlspecialchars($q['question_text']); ?></option><?php endforeach; ?>
+                                        <option value="" disabled <?php echo empty($old['sq2_raw']) ? 'selected' : ''; ?>>Select a question</option>
+                                        <?php foreach ($secret_questions as $q): ?><option value="<?php echo $q['id']; ?>" <?php echo (string)($old['sq2_raw'] ?? '') === (string)$q['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($q['question_text']); ?></option><?php endforeach; ?>
                                     </select>
-                                    <input type="text" name="sa2" class="form-control" placeholder="Your answer" required style="height:28px;font-size:0.75rem;">
+                                    <div style="position:relative;"><input type="password" name="sa2" id="sa2" class="form-control" placeholder="Your answer" required autocomplete="new-password" style="height:28px;font-size:0.75rem;padding-right:1.8rem;"><button type="button" onclick="togglePass('sa2',this)" class="pw-toggle" aria-label="Toggle answer"><i class="fas fa-eye"></i></button></div>
                                 </div>
                                 <div class="sq-item">
                                     <label><i class="fas fa-shield-alt" style="color:var(--primary);"></i> Security Question 3 *</label>
                                     <select name="sq3_raw" id="sq3_raw" class="form-control" required style="height:28px;font-size:0.75rem;margin-bottom:0.25rem;" onchange="syncHiddenId(this,'sq3_id')">
-                                        <option value="" disabled selected>Select a question</option>
-                                        <?php foreach ($secret_questions as $q): ?><option value="<?php echo $q['id']; ?>"><?php echo htmlspecialchars($q['question_text']); ?></option><?php endforeach; ?>
+                                        <option value="" disabled <?php echo empty($old['sq3_raw']) ? 'selected' : ''; ?>>Select a question</option>
+                                        <?php foreach ($secret_questions as $q): ?><option value="<?php echo $q['id']; ?>" <?php echo (string)($old['sq3_raw'] ?? '') === (string)$q['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($q['question_text']); ?></option><?php endforeach; ?>
                                     </select>
-                                    <input type="text" name="sa3" class="form-control" placeholder="Your answer" required style="height:28px;font-size:0.75rem;">
+                                    <div style="position:relative;"><input type="password" name="sa3" id="sa3" class="form-control" placeholder="Your answer" required autocomplete="new-password" style="height:28px;font-size:0.75rem;padding-right:1.8rem;"><button type="button" onclick="togglePass('sa3',this)" class="pw-toggle" aria-label="Toggle answer"><i class="fas fa-eye"></i></button></div>
                                 </div>
                             </div>
                         </div>
@@ -283,6 +309,7 @@ generate_csrf_token();
         function goToPage2(){
             var fn=$('first_name'),ln=$('last_name'),mi=$('middle_initial'),ex=$('extension_name');
             var ok=true;
+            if (!$('email').checkValidity()) { $('email').reportValidity(); ok=false; }
             if(fn.value.trim()&&!validateNameInput(fn,$('firstNameStatus'),'First name'))ok=false;
             if(ln.value.trim()&&!validateNameInput(ln,$('lastNameStatus'),'Last name'))ok=false;
             if(mi.value.trim()&&!/^[A-Z]$/.test(mi.value.trim())){$('firstNameStatus').textContent='Middle initial must be a single uppercase letter';$('firstNameStatus').style.color='var(--danger)';ok=false;}
@@ -308,10 +335,10 @@ generate_csrf_token();
 
         function computeAge(d){var t=new Date(),b=new Date(d);var a=t.getFullYear()-b.getFullYear();if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))a--;return a>=0?a:'';}
         $('birthdate').addEventListener('change',function(){$('age').value=computeAge(this.value);});
-        (async()=>{try{var r=await fetch('get_next_id.php');var d=await r.json();if(d.ok&&d.id_number){$('id_number').value=d.id_number;var s=$('idNumberStatus');if(s){s.textContent='Auto-generated';s.style.color='var(--success)';}}}catch(e){}})();
+        (async()=>{try{var r=await fetch('get_next_id.php');var d=await r.json();if(d.ok&&d.id_number&&!$('id_number').value){$('id_number').value=d.id_number;var s=$('idNumberStatus');if(s){s.textContent='Auto-generated';s.style.color='var(--success)';}}}catch(e){}})();
         var idTimer;$('id_number').addEventListener('input',function(e){var v=e.target.value.replace(/[^\d-]/g,'');var d=v.replace(/-/g,'');if(d.length>4)v=d.substring(0,4)+'-'+d.substring(4,8);else v=d;e.target.value=v;var s=$('idNumberStatus');if(!v){s.textContent='';e.target.setCustomValidity('');}else if(v.length===9&&/^\d{4}-\d{4}$/.test(v)){s.textContent='Valid format';s.style.color='var(--success)';clearTimeout(idTimer);idTimer=setTimeout(async()=>{try{var r=await fetch('check_id.php?id_number='+encodeURIComponent(v));var d=await r.json();if(d.ok){s.textContent=d.exists?'ID already exists':'ID available';s.style.color=d.exists?'var(--danger)':'var(--success)';e.target.setCustomValidity(d.exists?'Exists':'');}}catch(e){}},450);}else{s.textContent='Format: xxxx-xxxx';s.style.color='var(--danger)';e.target.setCustomValidity('Invalid');}});
-        var uPattern=/^[A-Za-z][A-Za-z0-9_]{7,29}$/;var uTimer;$('username').addEventListener('input',function(){clearTimeout(uTimer);var s=$('usernameStatus');var u=this.value.trim();if(!u){s.textContent='';return;}if(!uPattern.test(u)){s.textContent='Start with letter; 8-30 chars; letters/numbers/_';s.style.color='var(--danger)';return;}uTimer=setTimeout(async()=>{try{var r=await fetch('check_username.php?username='+encodeURIComponent(u));var d=await r.json();if(d.ok){s.textContent=d.available?'Username available':'Username taken';s.style.color=d.available?'var(--success)':'var(--danger)';}}catch(e){}},400);});
-        var ePattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;var eTimer;$('email').addEventListener('input',function(){clearTimeout(eTimer);var s=$('emailStatus');var em=this.value.trim();if(!em){s.textContent='';return;}if(!ePattern.test(em)){s.textContent='Invalid email';s.style.color='var(--danger)';return;}eTimer=setTimeout(async()=>{try{var r=await fetch('check_email.php?email='+encodeURIComponent(em));var d=await r.json();if(d.ok){s.textContent=d.available?'Email available':'Email already used';s.style.color=d.available?'var(--success)':'var(--danger)';}}catch(e){}},400);});
+        var uPattern=/^[A-Za-z](?=[A-Za-z0-9._]*[._0-9])[A-Za-z0-9._]{5,29}$/;var uTimer;$('username').addEventListener('input',function(){clearTimeout(uTimer);var s=$('usernameStatus');var u=this.value.trim();if(!u){s.textContent='';return;}if(!uPattern.test(u)){s.textContent='Start with a letter; 6-30 chars; letters, numbers, . or _; must include . _ or a number';s.style.color='var(--danger)';return;}uTimer=setTimeout(async()=>{try{var r=await fetch('check_username.php?username='+encodeURIComponent(u));var d=await r.json();if(d.ok){s.textContent=d.available?'Username available':'Username taken';s.style.color=d.available?'var(--success)':'var(--danger)';}}catch(e){}},400);});
+        var ePattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;var eTimer,emailRequest=0;function checkEmail(){clearTimeout(eTimer);var em=$('email').value.trim(),s=$('emailStatus'),request=++emailRequest;$('email').setCustomValidity('');if(!em){s.textContent='';return;}if(!ePattern.test(em)){s.textContent='Invalid email';s.style.color='var(--danger)';$('email').setCustomValidity('Enter a valid email address.');return;}s.textContent='Checking email…';s.style.color='var(--muted)';$('email').setCustomValidity('Checking email availability.');eTimer=setTimeout(async()=>{try{var r=await fetch('check_email.php?email='+encodeURIComponent(em));var d=await r.json();if(request!==emailRequest||em!==$('email').value.trim())return;if(d.ok){s.textContent=d.available?'Email available':'Email already used';s.style.color=d.available?'var(--success)':'var(--danger)';$('email').setCustomValidity(d.available?'':'Email already used. Enter a different email address.');}}catch(e){if(request===emailRequest)$('email').setCustomValidity('');}},400);} $('email').addEventListener('input',checkEmail);if($('email').value.trim())checkEmail();
         $('password').addEventListener('input',function(){var p=this.value;var s=$('passwordStrength');var score=0;if(p.length>=8)score++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))score++;if(/\d/.test(p))score++;if(/[^A-Za-z0-9]/.test(p))score++;var labels=['Weak','Medium','Strong','Very Strong'];var colors=['var(--danger)','var(--warning)','var(--success)','var(--success)'];s.textContent=labels[Math.max(0,score-1)]||'';s.style.color=colors[Math.max(0,score-1)]||'';});
         function validateNameInput(el,statusEl,label){
             var v=el.value.trim(),s=statusEl;
@@ -330,7 +357,7 @@ generate_csrf_token();
         var eTimer2;$('extension_name').addEventListener('input',function(){var s=$('extensionStatus');var v=this.value.trim();clearTimeout(eTimer2);if(!v){s.textContent='';this.setCustomValidity('');return;}eTimer2=setTimeout(function(){if(extPat.test(v)){s.textContent='Valid extension';s.style.color='var(--success)';$('extension_name').setCustomValidity('');}else{s.textContent='Jr., Sr., II, III, IV, V–X only';s.style.color='var(--danger)';$('extension_name').setCustomValidity('Invalid');}},300);});
         function checkConfirm(){var ok=$('password').value===$('confirm_password').value&&$('confirm_password').value.length>0;$('confirmStatus').textContent=ok?'Passwords match':($('confirm_password').value?'Passwords do not match':'');$('confirmStatus').style.color=ok?'var(--success)':'var(--danger)';}
         $('confirm_password').addEventListener('input',checkConfirm);$('password').addEventListener('input',checkConfirm);
-        ['sq1_raw','sq2_raw','sq3_raw'].forEach(function(id){$(id).addEventListener('change',function(){var sel=$(id).value;['sq1_raw','sq2_raw','sq3_raw'].forEach(function(oid){if(oid!==id){var opts=$(oid).options;for(var i=0;i<opts.length;i++){opts[i].disabled=(opts[i].value===sel&&opts[i].value!=='');}}});});});
+    var questionSelects=['sq1_raw','sq2_raw','sq3_raw'];function refreshQuestionChoices(){var selected={};questionSelects.forEach(function(id){if($(id).value)selected[$(id).value]=true;});questionSelects.forEach(function(id){var select=$(id);Array.prototype.forEach.call(select.options,function(option){option.disabled=option.value!==''&&selected[option.value]===true&&option.value!==select.value;});});questionSelects.forEach(function(id){var select=$(id),hiddenId=id.replace('_raw','_id');$(hiddenId).value=select.value;});}questionSelects.forEach(function(id){$(id).addEventListener('change',refreshQuestionChoices);});refreshQuestionChoices();
     });
     </script>
 </body>

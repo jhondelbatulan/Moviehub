@@ -13,28 +13,51 @@ require_permission('users.delete');
 $success = '';
 $error = '';
 
-$table = $_GET['table'] ?? $_POST['target_table'] ?? 'users';
+$table = ($_GET['table'] ?? $_POST['target_table'] ?? 'users') === 'admin_users' ? 'admin_users' : 'users';
 $id = intval($_GET['id'] ?? $_POST['target_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = 'Invalid security token.';
     } else {
+        $table = ($_POST['target_table'] ?? 'users') === 'admin_users' ? 'admin_users' : 'users';
         $target_id = intval($_POST['target_id']);
         $reason = trim($_POST['reason'] ?? '');
+        $is_super = (($_SESSION['admin_role'] ?? '') === 'super_admin');
 
         if (empty($reason)) {
             $error = 'Please provide a reason for the deletion request.';
-        } else {
+        } elseif ($table === 'admin_users' && (int)$target_id === (int)$_SESSION['admin_id']) {
+            $error = 'You cannot request to delete your own account.';
+        } elseif ($table === 'admin_users' && !$is_super && !check_permission($pdo, 'admin_users', $_SESSION['admin_id'], 'admins.delete')) {
+            $error = 'You do not have permission to request deletion of admin accounts.';
+        } elseif ($table === 'users') {
             $stmt = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE id = ?");
             $stmt->execute([$target_id]);
             $row = $stmt->fetch();
             if ($row) {
                 $stmt = $pdo->prepare("INSERT INTO deletion_requests (target_table, target_id, target_name, reason, requested_by_id, requested_by_name, status) VALUES ('users', ?, ?, ?, ?, ?, 'pending')");
                 $stmt->execute([$target_id, $row['full_name'], $reason, $_SESSION['admin_id'], $_SESSION['admin_full_name']]);
+                log_audit($pdo, 'deletion_request_created', 'users', $target_id, $row['full_name'], 'Deletion request submitted for user (pending review)');
                 $success = 'Deletion request for <strong>' . htmlspecialchars($row['full_name']) . '</strong> has been sent to Super Admin for review.';
             } else {
                 $error = 'User not found.';
+            }
+        } else {
+            $stmt = $pdo->prepare("SELECT full_name, role FROM admin_users WHERE id = ?");
+            $stmt->execute([$target_id]);
+            $row = $stmt->fetch();
+            if ($row) {
+                if (($row['role'] ?? '') === 'super_admin' && !$is_super) {
+                    $error = 'You cannot request deletion of a Super Administrator.';
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO deletion_requests (target_table, target_id, target_name, reason, requested_by_id, requested_by_name, status) VALUES ('admin_users', ?, ?, ?, ?, ?, 'pending')");
+                    $stmt->execute([$target_id, $row['full_name'], $reason, $_SESSION['admin_id'], $_SESSION['admin_full_name']]);
+                    log_audit($pdo, 'deletion_request_created', 'admin_users', $target_id, $row['full_name'], 'Deletion request submitted for admin (pending review)');
+                    $success = 'Deletion request for <strong>' . htmlspecialchars($row['full_name']) . '</strong> has been sent to Super Admin for review.';
+                }
+            } else {
+                $error = 'Admin account not found.';
             }
         }
     }
@@ -42,9 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $user_info = null;
 if ($id > 0) {
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$id]);
-    $user_info = $stmt->fetch();
+    if ($table === 'admin_users') {
+        $stmt = $pdo->prepare("SELECT full_name, username, email, id_number, phone, role, account_status FROM admin_users WHERE id = ?");
+        $stmt->execute([$id]);
+        $user_info = $stmt->fetch();
+    } else {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+        $user_info = $stmt->fetch();
+    }
 }
 
 generate_csrf_token();
@@ -66,36 +95,8 @@ $dash_link = $is_superadmin ? '../superadmin/dashboard.php' : 'dashboard.php';
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="<?php echo $dash_link; ?>" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-<?php if ($is_superadmin): ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Overview</div>
-                    <a href="../superadmin/dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
-                    <a href="../superadmin/account_management.php" class="sidebar-link active"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="../superadmin/create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
-                    <a href="../superadmin/privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
-                    <a href="../superadmin/deletion_requests.php" class="sidebar-link"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
-                    <a href="login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-<?php else: ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Main</div>
-                    <a href="dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Management</div>
-                    <a href="manage_movies.php" class="sidebar-link"><i class="fas fa-film"></i><span>Manage Movies</span></a>
-                    <a href="manage_genres.php" class="sidebar-link"><i class="fas fa-tags"></i><span>Manage Genres</span></a>
-                    <a href="rental_requests.php" class="sidebar-link"><i class="fas fa-clipboard-list"></i><span>Rental Requests</span></a>
-                    <a href="registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Approvals</span></a>
-                    <a href="login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-<?php endif; ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Account</div>
-                    <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="../superadmin/edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -121,23 +122,32 @@ $dash_link = $is_superadmin ? '../superadmin/dashboard.php' : 'dashboard.php';
                     <div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error); ?></div>
                     <a href="dashboard.php" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
                 <?php elseif (!$user_info): ?>
-                    <div class="card"><div class="empty-state"><i class="fas fa-user-slash"></i><h3>User Not Found</h3><p>The requested user account could not be found.</p><a href="dashboard.php" class="btn btn-primary">Back to Dashboard</a></div></div>
+                    <div class="card"><div class="empty-state"><i class="fas fa-user-slash"></i><h3>Account Not Found</h3><p>The requested account could not be found.</p><a href="dashboard.php" class="btn btn-primary">Back to Dashboard</a></div></div>
                 <?php else: ?>
                     <div class="card" style="margin-bottom:1.5rem;">
-                        <div class="card-header"><h3 class="card-title"><i class="fas fa-user"></i> Complete User Information</h3></div>
+                        <div class="card-header"><h3 class="card-title"><i class="fas fa-user"></i> <?php echo $table === 'admin_users' ? 'Admin Account Information' : 'Complete User Information'; ?></h3></div>
                         <div class="card-body">
                             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.75rem;">
+<?php if ($table === 'admin_users'): ?>
+                                <div><strong>Full Name:</strong> <?php echo htmlspecialchars($user_info['full_name']); ?></div>
+                                <div><strong>Username:</strong> <?php echo htmlspecialchars($user_info['username']); ?></div>
+                                <div><strong>Email:</strong> <?php echo htmlspecialchars($user_info['email']); ?></div>
+                                <div><strong>ID Number:</strong> <?php echo htmlspecialchars($user_info['id_number']); ?></div>
+                                <div><strong>Phone:</strong> <?php echo htmlspecialchars($user_info['phone'] ?? '-'); ?></div>
+                                <div><strong>Role:</strong> <?php echo render_role_badge($user_info['role']); ?></div>
+                                <div><strong>Status:</strong> <?php echo render_status_badge($user_info['account_status']); ?></div>
+<?php else: ?>
                                 <div><strong>Full Name:</strong> <?php echo htmlspecialchars(trim($user_info['first_name'].' '.$user_info['middle_initial'].' '.$user_info['last_name']).($user_info['extension_name']?' '.$user_info['extension_name']:'')); ?></div>
                                 <div><strong>Username:</strong> <?php echo htmlspecialchars($user_info['username']); ?></div>
                                 <div><strong>Email:</strong> <?php echo htmlspecialchars($user_info['email']); ?></div>
                                 <div><strong>ID Number:</strong> <?php echo htmlspecialchars($user_info['id_number']); ?></div>
-                                <div><strong>Employee ID:</strong> <?php echo htmlspecialchars($user_info['employee_id']); ?></div>
                                 <div><strong>Sex:</strong> <?php echo htmlspecialchars($user_info['sex']); ?></div>
                                 <div><strong>Birthdate:</strong> <?php echo htmlspecialchars($user_info['birthdate']); ?></div>
                                 <div><strong>Contact:</strong> <?php echo htmlspecialchars($user_info['contact_number']); ?></div>
                                 <div style="grid-column:1/-1;"><strong>Address:</strong> <?php echo htmlspecialchars(implode(', ', array_filter([$user_info['address_street'],$user_info['address_barangay'],$user_info['address_city'],$user_info['address_province'],$user_info['address_country'],$user_info['zip_code']]))); ?></div>
                                 <div><strong>Role:</strong> <?php echo render_role_badge($user_info['role'] ?? 'user'); ?></div>
                                 <div><strong>Status:</strong> <?php echo render_status_badge($user_info['account_status']); ?></div>
+<?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -147,7 +157,7 @@ $dash_link = $is_superadmin ? '../superadmin/dashboard.php' : 'dashboard.php';
                         <div class="card-body">
                             <form method="POST" action="">
                                 <?php csrf_token_input(); ?>
-                                <input type="hidden" name="target_table" value="users">
+                                <input type="hidden" name="target_table" value="<?php echo $table === 'admin_users' ? 'admin_users' : 'users'; ?>">
                                 <input type="hidden" name="target_id" value="<?php echo $id; ?>">
                                 <div class="form-group">
                                     <label>Why should this account be deleted? *</label>

@@ -40,13 +40,20 @@ $user_table = $_SESSION['reset_verified_user_table'] ?? 'admin_users';
 unset($_SESSION['reset_verified_user_id'], $_SESSION['reset_verified_user_table']);
 
 try {
-    if ($user_table !== 'admin_users') {
-        echo json_encode(['ok' => false, 'message' => 'Invalid account type for this flow.']);
-        exit;
-    }
     $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("UPDATE admin_users SET password = ?, must_change_password = 0, account_status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-    $stmt->execute([$hashed_password, $user_id]);
+    if ($user_table === 'users') {
+        $stmt = $pdo->prepare("UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+        $stmt->execute([$hashed_password, $user_id]);
+    } else {
+        $stmt = $pdo->prepare("SELECT full_name, username, account_status FROM admin_users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $who = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $pdo->prepare("UPDATE admin_users SET password = ?, must_change_password = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+        $stmt->execute([$hashed_password, $user_id]);
+        if ($who) {
+            log_audit($pdo, 'password_change', 'admin_users', $user_id, $who['full_name'] ?: $who['username'], 'Password reset via forgot-password flow; account status left as "' . $who['account_status'] . '"');
+        }
+    }
 
     echo json_encode(['ok' => true, 'message' => 'Password reset successfully! Redirecting to login...']);
 } catch (PDOException $e) {

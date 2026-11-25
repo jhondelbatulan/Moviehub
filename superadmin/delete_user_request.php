@@ -30,8 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->execute([$target_id]);
             $row = $stmt->fetch();
             if ($row) {
-                $stmt = $pdo->prepare("INSERT INTO deletion_requests (target_table, target_id, target_name, reason, requested_by_id, requested_by_name, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')");
+$stmt = $pdo->prepare("INSERT INTO deletion_requests (target_table, target_id, target_name, reason, requested_by_id, requested_by_name, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')");
                 $stmt->execute([$table, $target_id, $row['full_name'], $reason, $_SESSION['admin_id'], $_SESSION['admin_full_name']]);
+                log_audit($pdo, 'deletion_request_created', $table, $target_id, $row['full_name'], 'Deletion request submitted (pending review)');
                 $success = 'Deletion request sent for ' . htmlspecialchars($row['full_name']) . '. Waiting for super admin approval.';
             } else {
                 $error = 'User not found.';
@@ -41,8 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->execute([$target_id]);
             $row = $stmt->fetch();
             if ($row) {
-                $stmt = $pdo->prepare("INSERT INTO deletion_requests (target_table, target_id, target_name, reason, requested_by_id, requested_by_name, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')");
+$stmt = $pdo->prepare("INSERT INTO deletion_requests (target_table, target_id, target_name, reason, requested_by_id, requested_by_name, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')");
                 $stmt->execute([$table, $target_id, $row['full_name'], $reason, $_SESSION['admin_id'], $_SESSION['admin_full_name']]);
+                log_audit($pdo, 'deletion_request_created', $table, $target_id, $row['full_name'], 'Deletion request submitted (pending review)');
                 $success = 'Deletion request sent for ' . htmlspecialchars($row['full_name']) . '. Waiting for super admin approval.';
             } else {
                 $error = 'Admin not found.';
@@ -81,23 +83,8 @@ generate_csrf_token();
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="dashboard.php" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-                <div class="sidebar-section"><div class="sidebar-section-title">Overview</div>
-                    <a href="dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
-                    <a href="account_management.php" class="sidebar-link active"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
-                    <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
-                    <a href="deletion_requests.php" class="sidebar-link"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
-                    <a href="../admin/login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Account</div>
-                    <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -130,8 +117,7 @@ generate_csrf_token();
                                     <div><strong>Name:</strong> <?php echo htmlspecialchars(trim($user_info['first_name'].' '.$user_info['middle_initial'].' '.$user_info['last_name']).($user_info['extension_name']?' '.$user_info['extension_name']:'')); ?></div>
                                     <div><strong>Username:</strong> <?php echo htmlspecialchars($user_info['username']); ?></div>
                                     <div><strong>Email:</strong> <?php echo htmlspecialchars($user_info['email']); ?></div>
-                                    <div><strong>ID Number:</strong> <?php echo htmlspecialchars($user_info['id_number']); ?></div>
-                                    <div><strong>Employee ID:</strong> <?php echo htmlspecialchars($user_info['employee_id']); ?></div>
+<div><strong>ID Number:</strong> <?php echo htmlspecialchars($user_info['id_number']); ?></div>
                                     <div><strong>Sex:</strong> <?php echo htmlspecialchars($user_info['sex']); ?></div>
                                     <div><strong>Birthdate:</strong> <?php echo htmlspecialchars($user_info['birthdate']); ?></div>
                                     <div><strong>Contact:</strong> <?php echo htmlspecialchars($user_info['contact_number']); ?></div>
@@ -141,8 +127,8 @@ generate_csrf_token();
                                 <?php else: ?>
                                     <div><strong>Full Name:</strong> <?php echo htmlspecialchars($user_info['full_name']); ?></div>
                                     <div><strong>Username:</strong> <?php echo htmlspecialchars($user_info['username']); ?></div>
-                                    <div><strong>Email:</strong> <?php echo htmlspecialchars($user_info['email']); ?></div>
-                                    <div><strong>Employee ID:</strong> <?php echo htmlspecialchars($user_info['employee_id']); ?></div>
+<div><strong>Email:</strong> <?php echo htmlspecialchars($user_info['email']); ?></div>
+                                    <div><strong>ID Number:</strong> <?php echo htmlspecialchars($user_info['id_number']); ?></div>
                                     <div><strong>Phone:</strong> <?php echo htmlspecialchars($user_info['phone'] ?? '-'); ?></div>
                                     <div><strong>Role:</strong> <?php echo render_role_badge($user_info['role']); ?></div>
                                     <div><strong>Status:</strong> <?php echo render_status_badge($user_info['account_status']); ?></div>

@@ -70,37 +70,8 @@ generate_csrf_token();
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="<?php echo ($_SESSION['admin_role'] ?? '') === 'super_admin' ? '../superadmin/dashboard.php' : 'dashboard.php'; ?>" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-<?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Overview</div>
-                    <a href="../superadmin/dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
-                    <a href="../superadmin/account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="../superadmin/create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
-                    <a href="../superadmin/privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
-                    <a href="../superadmin/deletion_requests.php" class="sidebar-link"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
-                    <a href="login_logs.php" class="sidebar-link active"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-<?php else: ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Main</div>
-                    <a href="dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Management</div>
-                    <a href="account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="manage_movies.php" class="sidebar-link"><i class="fas fa-film"></i><span>Manage Movies</span></a>
-                    <a href="manage_genres.php" class="sidebar-link"><i class="fas fa-tags"></i><span>Manage Genres</span></a>
-                    <a href="rental_requests.php" class="sidebar-link"><i class="fas fa-clipboard-list"></i><span>Rental Requests</span></a>
-                    <a href="registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Approvals</span></a>
-                    <a href="login_logs.php" class="sidebar-link active"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-<?php endif; ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Account</div>
-                    <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="../superadmin/edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -173,7 +144,7 @@ generate_csrf_token();
                                     <td>
                                         <strong><?php echo htmlspecialchars($log['full_name']); ?></strong><br>
                                         <small class="text-muted"><?php echo htmlspecialchars($log['username']); ?></small>
-                                        <?php if (!empty($log['employee_id'])): ?><br><small class="text-muted"><?php echo htmlspecialchars($log['employee_id']); ?></small><?php endif; ?>
+                                        <?php if (!empty($log['id_number'])): ?><br><small class="text-muted"><?php echo htmlspecialchars($log['id_number']); ?></small><?php endif; ?>
                                     </td>
                                     <td><?php echo render_role_badge($log['role']); ?></td>
                                     <td>

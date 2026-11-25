@@ -28,24 +28,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $req = $stmt->fetch();
                 if ($req) {
                     $pdo->beginTransaction();
-                    $table = $req['target_table'];
-                    $uid = $req['target_id'];
-                    if ($table === 'users') {
-                        $stmt = $pdo->prepare("UPDATE users SET is_deleted = 1 WHERE id = ?");
-                    } else {
-                        $stmt = $pdo->prepare("UPDATE admin_users SET is_deleted = 1 WHERE id = ?");
+                    try {
+                        $info = hard_delete_account($pdo, $req['target_table'], $req['target_id'], true);
+                        $stmt = $pdo->prepare("UPDATE deletion_requests SET status = 'approved', reviewed_by_id = ?, reviewed_by_name = ?, rejection_reason = ?, reviewed_at = NOW() WHERE id = ?");
+                        $stmt->execute([$_SESSION['admin_id'], $_SESSION['admin_full_name'] ?? '', $admin_notes, $request_id]);
+                        $pdo->prepare("INSERT INTO activity_logs (admin_id, admin_username, action, target_type, target_id, target_name, reason, ip_address) VALUES (?, ?, 'delete_approve', ?, ?, ?, ?, ?)")
+                            ->execute([$_SESSION['admin_id'], $_SESSION['admin_username'], $req['target_table'], $req['target_id'], $info['full_name'], $admin_notes, $_SERVER['REMOTE_ADDR'] ?? '']);
+                        log_audit($pdo, 'delete_approve', $req['target_table'], $req['target_id'], $info['full_name'], 'Deletion request approved and account permanently deleted');
+                        $pdo->commit();
+                        $success = 'Deletion request approved. The account row (' . htmlspecialchars($info['full_name']) . ') has been permanently deleted from the database.';
+                    } catch (PDOException $e) {
+                        $pdo->rollBack();
+                        error_log('[deletion_requests] ' . $e->getMessage());
+                        $error = 'Failed to delete the account from the database.';
                     }
-                    $stmt->execute([$uid]);
-                    $stmt = $pdo->prepare("UPDATE deletion_requests SET status = 'approved', reviewed_by_id = ?, reviewed_by_name = ?, rejection_reason = ?, reviewed_at = NOW() WHERE id = ?");
-                    $stmt->execute([$_SESSION['admin_id'], $_SESSION['admin_full_name'] ?? '', $admin_notes, $request_id]);
-                    $pdo->commit();
-                    $success = 'Deletion request approved. Account soft-deleted.';
                 } else {
                     $error = 'Request not found or already processed.';
                 }
             } elseif ($action === 'reject') {
-                $stmt = $pdo->prepare("UPDATE deletion_requests SET status = 'rejected', reviewed_by_id = ?, reviewed_by_name = ?, rejection_reason = ?, reviewed_at = NOW() WHERE id = ? AND status = 'pending'");
+$stmt = $pdo->prepare("UPDATE deletion_requests SET status = 'rejected', reviewed_by_id = ?, reviewed_by_name = ?, rejection_reason = ?, reviewed_at = NOW() WHERE id = ? AND status = 'pending'");
                 $stmt->execute([$_SESSION['admin_id'], $_SESSION['admin_full_name'] ?? '', $admin_notes, $request_id]);
+                $stmt2 = $pdo->prepare("SELECT target_table, target_id, target_name FROM deletion_requests WHERE id = ?");
+                $stmt2->execute([$request_id]);
+                $rreq = $stmt2->fetch();
+                if ($rreq) log_audit($pdo, 'delete_reject', $rreq['target_table'], $rreq['target_id'], $rreq['target_name'], 'Deletion request rejected');
                 $success = 'Deletion request rejected.';
             }
         } catch (PDOException $e) {
@@ -61,10 +67,11 @@ $processed = [];
 try {
     $pending = $pdo->prepare("
         SELECT dr.*, 
-            CASE dr.target_table 
-                WHEN 'users' THEN (SELECT CONCAT(first_name,' ',last_name) FROM users WHERE id = dr.target_id)
-                WHEN 'admin_users' THEN (SELECT full_name FROM admin_users WHERE id = dr.target_id)
-            END as full_name,
+            COALESCE(
+                CASE dr.target_table 
+                    WHEN 'users' THEN (SELECT CONCAT(first_name,' ',last_name) FROM users WHERE id = dr.target_id)
+                    WHEN 'admin_users' THEN (SELECT full_name FROM admin_users WHERE id = dr.target_id)
+                END, dr.target_name) as full_name,
             CASE dr.target_table 
                 WHEN 'users' THEN (SELECT username FROM users WHERE id = dr.target_id)
                 WHEN 'admin_users' THEN (SELECT username FROM admin_users WHERE id = dr.target_id)
@@ -80,10 +87,11 @@ try {
 try {
     $processed = $pdo->prepare("
         SELECT dr.*, 
-            CASE dr.target_table 
-                WHEN 'users' THEN (SELECT CONCAT(first_name,' ',last_name) FROM users WHERE id = dr.target_id)
-                WHEN 'admin_users' THEN (SELECT full_name FROM admin_users WHERE id = dr.target_id)
-            END as full_name,
+            COALESCE(
+                CASE dr.target_table 
+                    WHEN 'users' THEN (SELECT CONCAT(first_name,' ',last_name) FROM users WHERE id = dr.target_id)
+                    WHEN 'admin_users' THEN (SELECT full_name FROM admin_users WHERE id = dr.target_id)
+                END, dr.target_name) as full_name,
             au.full_name as reviewed_by_name
         FROM deletion_requests dr
         LEFT JOIN admin_users au ON dr.reviewed_by_id = au.id
@@ -112,23 +120,8 @@ generate_csrf_token();
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="dashboard.php" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-                <div class="sidebar-section"><div class="sidebar-section-title">Overview</div>
-                    <a href="dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
-                    <a href="account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
-                    <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
-                    <a href="deletion_requests.php" class="sidebar-link active"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
-                    <a href="../admin/login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Account</div>
-                    <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -173,7 +166,7 @@ generate_csrf_token();
                                     <textarea name="admin_notes" class="form-control" rows="2" placeholder="Add notes about this decision..."></textarea>
                                 </div>
                                 <div class="flex gap-3">
-                                    <button type="submit" name="action" value="approve" class="btn btn-danger" style="flex:1;" onclick="return confirm('Approve deletion? This will soft-delete the account.');"><i class="fas fa-check"></i> Approve Deletion</button>
+                                    <button type="submit" name="action" value="approve" class="btn btn-danger" style="flex:1;" onclick="return confirm('Approve deletion? This will permanently delete the account and its related records from the database.');"><i class="fas fa-check"></i> Approve Deletion</button>
                                     <button type="submit" name="action" value="reject" class="btn btn-outline" style="flex:1;"><i class="fas fa-times"></i> Reject</button>
                                 </div>
                             </form>

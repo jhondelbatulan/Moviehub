@@ -82,6 +82,8 @@ define('STATUS_REJECTED', 'rejected');
 define('STATUS_BLOCKED', 'blocked');
 define('STATUS_ACTIVE', 'active');
 define('STATUS_INACTIVE', 'inactive');
+define('STATUS_ONLINE', 'online');
+define('STATUS_OFFLINE', 'offline');
 
 // Lockout Configuration
 define('LOCKOUT_THRESHOLD', 3);

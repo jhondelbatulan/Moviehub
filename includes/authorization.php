@@ -4,7 +4,8 @@ require_once __DIR__ . '/csrf.php';
 
 function require_login() {
     if (session_status() === PHP_SESSION_NONE) session_start();
-    if (!is_logged_in()) {
+    $is_pending_setup = !empty($_SESSION['pending_admin_setup']) || !empty($_SESSION['pending_user_setup']);
+    if (!is_logged_in() && !$is_pending_setup) {
         flash_message('error', 'Please log in to continue.');
         $base = get_auth_redirect_base();
         redirect($base . 'login.php');
@@ -12,9 +13,9 @@ function require_login() {
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > SESSION_TIMEOUT) {
         $pdo = $GLOBALS['pdo'] ?? null;
         if ($pdo && isset($_SESSION['admin_id'])) {
-            log_login($pdo, 'admin_users', $_SESSION['admin_id'], $_SESSION['admin_username'] ?? '', $_SESSION['admin_full_name'] ?? '', $_SESSION['admin_role'] ?? '', 'logout', 'success', $_SESSION['admin_employee_id'] ?? null);
+            log_login($pdo, 'admin_users', $_SESSION['admin_id'], $_SESSION['admin_username'] ?? '', $_SESSION['admin_full_name'] ?? '', $_SESSION['admin_role'] ?? '', 'logout', 'success', $_SESSION['admin_id_number'] ?? null);
         } elseif ($pdo && isset($_SESSION['user_id'])) {
-            log_login($pdo, 'users', $_SESSION['user_id'], $_SESSION['username'] ?? '', $_SESSION['full_name'] ?? '', $_SESSION['user_role'] ?? 'user', 'logout', 'success', $_SESSION['employee_id'] ?? null);
+            log_login($pdo, 'users', $_SESSION['user_id'], $_SESSION['username'] ?? '', $_SESSION['full_name'] ?? '', $_SESSION['user_role'] ?? 'user', 'logout', 'success', $_SESSION['id_number'] ?? null);
         }
         session_unset(); session_destroy(); session_start();
         flash_message('error', 'Session expired. Please log in again.');
@@ -23,9 +24,42 @@ function require_login() {
     }
     $_SESSION['last_activity'] = time();
 
+    $pdo = $GLOBALS['pdo'] ?? null;
+    if ($pdo && isset($_SESSION['admin_id'])) {
+        try {
+            $stmt = $pdo->prepare("SELECT account_status FROM admin_users WHERE id = ?");
+            $stmt->execute([$_SESSION['admin_id']]);
+            $live = $stmt->fetchColumn();
+            if ($live === 'inactive' || $live === 'blocked') {
+                log_login($pdo, 'admin_users', $_SESSION['admin_id'], $_SESSION['admin_username'] ?? '', $_SESSION['admin_full_name'] ?? '', $_SESSION['admin_role'] ?? '', 'logout', 'success', $_SESSION['admin_id_number'] ?? null);
+                session_unset(); session_destroy(); session_start();
+                flash_message('error', $live === 'blocked' ? 'Your account is blocked.' : 'Your account is inactive. It must be activated by another admin.');
+                $base = get_auth_redirect_base();
+                redirect($base . 'login.php');
+            }
+        } catch (PDOException $e) {
+            error_log("[require_login] status check error: " . $e->getMessage());
+        }
+    }
+    if ($pdo && isset($_SESSION['user_id'])) {
+        try {
+            $stmt = $pdo->prepare("SELECT account_status FROM users WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $live = $stmt->fetchColumn();
+            if ($live === 'blocked' || $live === 'pending' || $live === 'rejected') {
+                log_login($pdo, 'users', $_SESSION['user_id'], $_SESSION['username'] ?? '', $_SESSION['full_name'] ?? '', $_SESSION['user_role'] ?? 'user', 'logout', 'success', $_SESSION['id_number'] ?? null);
+                session_unset(); session_destroy(); session_start();
+                flash_message('error', $live === 'blocked' ? 'Your account is blocked.' : 'Your account is no longer active. Please contact support.');
+                redirect('login.php');
+            }
+        } catch (PDOException $e) {
+            error_log("[require_login] user status check error: " . $e->getMessage());
+        }
+    }
+
     $script = $_SERVER['SCRIPT_NAME'] ?? '';
     $is_change_pw = strpos($script, 'change_password.php') !== false;
-    if (!$is_change_pw && !empty($_SESSION['admin_id']) && !empty($_SESSION['must_change_password'])) {
+    if (!$is_change_pw && !empty($_SESSION['must_change_password']) && (isset($_SESSION['admin_id']) || isset($_SESSION['user_id']))) {
         $base = get_auth_redirect_base();
         redirect($base . 'change_password.php');
     }
@@ -107,7 +141,7 @@ function require_status_active() {
     if (session_status() === PHP_SESSION_NONE) session_start();
     require_login();
     $status = $_SESSION['account_status'] ?? null;
-    if ($status && $status !== STATUS_ACTIVE && $status !== STATUS_APPROVED) {
+    if ($status && !in_array($status, [STATUS_ACTIVE, STATUS_APPROVED, STATUS_ONLINE], true)) {
         session_unset(); session_destroy(); session_start();
         flash_message('error', 'Your account has been ' . $status . '. Please contact support.');
         redirect('login.php');

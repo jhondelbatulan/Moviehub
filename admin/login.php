@@ -47,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
             if ($result['success']) {
                 $_SESSION[$attemptKey] = 0;
                 $_SESSION[$lockKey] = 0;
-                if (!empty($_SESSION['must_change_password'])) {
+                if (!empty($_SESSION['pending_admin_setup'])) {
+                    header('Location: change_password.php');
+                } elseif (!empty($_SESSION['must_change_password'])) {
                     header('Location: change_password.php');
                 } elseif (($result['role'] ?? '') === 'super_admin') {
                     header('Location: ../superadmin/dashboard.php');
@@ -69,8 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
                 $error = $result['message'] ?? 'Invalid username or password.';
             }
         }
-    }
 }
+}
+if ($error === '') { $fb = flash_message('error'); if ($fb) { $error = $fb; } }
+$flash_success = flash_message('success');
 generate_csrf_token();
 ?>
 <!DOCTYPE html>
@@ -99,15 +103,18 @@ generate_csrf_token();
             <h2 class="auth-title">Admin Login</h2>
             <p class="auth-subtitle">Sign in to the admin panel</p>
 
-            <?php if ($error): ?>
+<?php if ($error): ?>
                 <div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+            <?php if (!empty($flash_success)): ?>
+                <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($flash_success); ?></div>
             <?php endif; ?>
 
             <form method="POST" action="" class="auth-form">
                 <?php csrf_token_input(); ?>
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter admin username" required>
+<div class="form-group">
+                    <label for="username">Username or ID Number</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter admin username or ID number" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>

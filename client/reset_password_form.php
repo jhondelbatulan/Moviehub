@@ -58,6 +58,13 @@ $full_verified = $via_otp && $security_verified;
                     <h2><i class="fas fa-key" style="color:var(--primary);"></i> Reset Password</h2>
                     <p><?php echo $full_verified ? 'OTP and security questions verified. Set your new password.' : ($via_otp ? 'OTP verified. Set your new password.' : 'Answer your security questions to reset your password'); ?></p>
                 </div>
+
+                <?php if (!empty($_SESSION['reset_masked_id_number']) || !empty($_SESSION['reset_masked_email'])): ?>
+                <div class="alert alert-info" style="margin:0.75rem 1.5rem 0;font-size:0.8125rem;display:flex;flex-direction:column;gap:0.25rem;">
+                    <?php if (!empty($_SESSION['reset_masked_id_number'])): ?><span><i class="fas fa-id-card"></i> ID Number: <strong><?php echo htmlspecialchars($_SESSION['reset_masked_id_number']); ?></strong></span><?php endif; ?>
+                    <?php if (!empty($_SESSION['reset_masked_email'])): ?><span><i class="fas fa-envelope"></i> Email: <strong><?php echo htmlspecialchars($_SESSION['reset_masked_email']); ?></strong></span><?php endif; ?>
+                </div>
+                <?php endif; ?>
                 <?php if ($full_verified): ?>
                 <div class="step-ind">
                     <div class="step-dot completed" id="si1"><div class="sn"><i class="fas fa-check" style="font-size:10px;"></i></div> OTP</div>

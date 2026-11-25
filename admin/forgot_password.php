@@ -25,20 +25,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = 'ID number must be in the format xxxx-xxxx (e.g. 1234-5678).';
         } else {
             try {
+                $user = null;
+                $user_table = '';
+                $full_name = '';
                 $stmt = $pdo->prepare("SELECT id, email, full_name FROM admin_users WHERE id_number = ? AND is_deleted = 0");
                 $stmt->execute([$id_number]);
-                $admin = $stmt->fetch();
-                if (!$admin) {
-                    $error = 'No admin account found with that ID number.';
+                $found = $stmt->fetch();
+                if ($found) {
+                    $user = $found;
+                    $user_table = 'admin_users';
+                    $full_name = $found['full_name'];
                 } else {
-                    if (!can_resend_otp($pdo, 'admin_users', $admin['id'], 'password_reset')) {
+                    $stmt = $pdo->prepare("SELECT id, email, CONCAT(first_name, ' ', last_name) AS full_name FROM users WHERE id_number = ? AND is_deleted = 0");
+                    $stmt->execute([$id_number]);
+                    $found = $stmt->fetch();
+                    if ($found) {
+                        $user = $found;
+                        $user_table = 'users';
+                        $full_name = $found['full_name'];
+                    }
+                }
+                if (!$user) {
+                    $error = 'No account found with that ID number.';
+                } else {
+                    if (!can_resend_otp($pdo, $user_table, $user['id'], 'password_reset')) {
                         $error = 'Too many OTP requests. Please wait before trying again.';
                     } else {
-                        $otp = create_otp($pdo, 'admin_users', $admin['id'], 'password_reset');
-                        $_SESSION['otp_user_id'] = $admin['id'];
-                        $_SESSION['otp_user_table'] = 'admin_users';
+                        $otp = create_otp($pdo, $user_table, $user['id'], 'password_reset');
+                        $_SESSION['otp_user_id'] = $user['id'];
+                        $_SESSION['otp_user_table'] = $user_table;
                         $_SESSION['otp_purpose'] = 'password_reset';
-                        send_otp_email($admin['email'], $otp, $admin['full_name']);
+                        $_SESSION['otp_masked_id_number'] = mask_id_number($id_number);
+                        $_SESSION['otp_masked_email'] = mask_email($user['email']);
+                        send_otp_email($user['email'], $otp, $full_name);
                         header('Location: verify_otp.php');
                         exit();
                     }

@@ -46,7 +46,136 @@ function mask_email($email) {
     } else {
         $domain_masked = $domain;
     }
-    return $masked . '@' . $domain_masked;
+return $masked . '@' . $domain_masked;
+}
+
+function mask_id_number($id_number) {
+    $id_number = (string)$id_number;
+    if (!preg_match('/^(\d{4})-?(\d{4})$/', $id_number, $m)) return '****-****';
+    $a = $m[1]; $b = $m[2];
+    return substr($a, 0, 2) . '**-**' . substr($b, 2, 2);
+}
+
+function get_next_id_number($pdo) {
+    try {
+        $stmt = $pdo->query("
+            SELECT CAST(REPLACE(id_number,'-','') AS UNSIGNED) AS n FROM users WHERE is_deleted = 0 AND id_number IS NOT NULL AND id_number <> ''
+            UNION SELECT CAST(REPLACE(id_number,'-','') AS UNSIGNED) FROM admin_users WHERE is_deleted = 0 AND id_number IS NOT NULL AND id_number <> ''
+            UNION SELECT CAST(REPLACE(id_number,'-','') AS UNSIGNED) FROM pending_admin_accounts WHERE id_number IS NOT NULL AND id_number <> ''
+            UNION SELECT CAST(REPLACE(id_number,'-','') AS UNSIGNED) FROM pending_user_accounts WHERE id_number IS NOT NULL AND id_number <> ''
+        ");
+        $max = 0;
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $n) {
+            if ((int)$n > $max) $max = (int)$n;
+        }
+        $next = sprintf('%08d', $max + 1);
+        return substr($next, 0, 4) . '-' . substr($next, 4, 4);
+    } catch (PDOException $e) {
+        error_log('[get_next_id_number] ' . $e->getMessage());
+        return '0000-0001';
+    }
+}
+
+function generate_password($length = 12) {
+    $upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    $lower = 'abcdefghijkmnopqrstuvwxyz';
+    $digits = '23456789';
+    $symbols = '!@#$%^&*()-_+';
+    $all = $upper . $lower . $digits . $symbols;
+    $pw = $upper[random_int(0, strlen($upper) - 1)]
+        . $lower[random_int(0, strlen($lower) - 1)]
+        . $digits[random_int(0, strlen($digits) - 1)]
+        . $symbols[random_int(0, strlen($symbols) - 1)];
+    for ($i = 4; $i < $length; $i++) {
+        $pw .= $all[random_int(0, strlen($all) - 1)];
+    }
+    return str_shuffle($pw);
+}
+
+function validate_strong_password($password) {
+    $password = (string)$password;
+    if (strlen($password) < 8 || strlen($password) > 30) return 'Password must be 8-30 characters.';
+    if (preg_match('/\s/', $password)) return 'Password cannot contain spaces.';
+    $categories = 0;
+    if (preg_match('/[A-Za-z]/', $password)) $categories++;
+    if (preg_match('/[0-9]/', $password)) $categories++;
+    if (preg_match('/[^A-Za-z0-9]/', $password)) $categories++;
+    if ($categories < 2) return 'Password is weak. Combine letters with numbers or symbols.';
+    return '';
+}
+
+function validate_name_field($name) {
+    $name = trim((string)$name);
+    if ($name === '') return '';
+    if (strlen($name) < 2 || strlen($name) > 30) return 'Name must be 2-30 characters.';
+    if (!preg_match('/^[A-Z][a-z]+(?: [A-Z][a-z]+)*$/', $name)) return 'Must start with a capital letter, single spaces, with the rest in lowercase (e.g. Juan Dela Cruz).';
+    if (preg_match('/^[A-Z]+$/', $name)) return 'Cannot be all capital letters.';
+    if (preg_match('/([A-Z][a-z]*)[A-Z]/', $name)) return 'Cannot have camel-case letters in the middle of a name.';
+    if (preg_match('/[0-9]/', $name) || preg_match('/[^A-Za-z ]/', $name)) return 'Cannot contain numbers or special characters.';
+    if (preg_match('/(.)\1{2,}/', $name)) return 'Cannot have three or more consecutive identical letters.';
+    return '';
+}
+
+function validate_middle_initial($mi) {
+    $mi = strtoupper(trim((string)$mi));
+    if ($mi === '') return '';
+    if (!preg_match('/^[A-Z]$/', $mi)) return 'Middle initial must be a single capital letter only.';
+    return '';
+}
+
+function validate_extension_name($ext) {
+    $ext = trim((string)$ext);
+    if ($ext === '') return '';
+    if (!preg_match('/^(Jr\.?|Sr\.?|II|III|IV|V|VI|VII|VIII|IX|X)$/i', $ext)) return 'Extension must be Jr., Sr., or a Roman numeral (II, III, IV, etc.).';
+    return '';
+}
+
+function validate_birthdate($birthdate) {
+    $birthdate = trim((string)$birthdate);
+    if ($birthdate === '') return 'Birth date is required.';
+    $d = DateTime::createFromFormat('Y-m-d', $birthdate);
+    $errors = DateTime::getLastErrors();
+    if (!$d || ($errors && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) return 'Enter a valid birth date.';
+    if ($birthdate > date('Y-m-d')) return 'Birth date cannot be in the future.';
+    if (compute_age($birthdate) > 120) return 'Birth date appears to be invalid (age over 120).';
+    return '';
+}
+
+function validate_address_field($value, $label = 'Address') {
+    $value = trim((string)$value);
+    if ($value === '') return '';
+    if (strlen($value) < 2 || strlen($value) > 100) return $label . ' must be 2-100 characters.';
+    if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9 .,\'#-]*$/', $value)) return $label . ' contains invalid characters.';
+    if (!preg_match('/[A-Za-z]/', $value)) return $label . ' must contain at least one letter.';
+    return '';
+}
+
+function validate_ph_contact($contact) {
+    $contact = trim((string)$contact);
+    if ($contact === '') return '';
+    $n = preg_replace('/[^0-9]/', '', $contact);
+    if (strpos($n, '63') === 0) $n = substr($n, 2);
+    if (strpos($n, '0') === 0) $n = substr($n, 1);
+    if (preg_match('/^9\d{9}$/', $n)) return '';
+    return 'Enter a valid Philippine mobile number (e.g. 0917-123-4567 or +63 917 123 4567).';
+}
+
+function compute_age($birthdate) {
+    if (empty($birthdate)) return '';
+    try {
+        $d = new DateTime($birthdate);
+    } catch (Exception $e) {
+        return '';
+    }
+    return (new DateTime('now'))->diff($d)->y;
+}
+
+function is_profile_complete($row, $is_admin = false) {
+    if (!$row) return false;
+    foreach (['first_name', 'last_name', 'sex', 'birthdate', 'contact_number', 'email'] as $col) {
+        if (!isset($row[$col]) || trim((string)$row[$col]) === '') return false;
+    }
+    return true;
 }
 
 function is_logged_in() {
@@ -192,22 +321,13 @@ function log_audit($pdo, $action, $target_table = null, $target_id = null, $targ
     }
 }
 
-function log_login($pdo, $user_table, $user_id, $username, $full_name, $role, $action, $status, $employee_id = null) {
+function log_login($pdo, $user_table, $user_id, $username, $full_name, $role, $action, $status, $id_number = null) {
     try {
-        $stmt = $pdo->prepare("INSERT INTO login_logs (user_table, user_id, employee_id, full_name, username, role, action, status, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$user_table, $user_id, $employee_id, $full_name, $username, $role, $action, $status, get_client_ip(), $_SERVER['HTTP_USER_AGENT'] ?? null]);
+        $stmt = $pdo->prepare("INSERT INTO login_logs (user_table, user_id, id_number, full_name, username, role, action, status, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_table, $user_id, $id_number, $full_name, $username, $role, $action, $status, get_client_ip(), $_SERVER['HTTP_USER_AGENT'] ?? null]);
     } catch (PDOException $e) {
         error_log("Login log error: " . $e->getMessage());
     }
-}
-
-function generate_employee_id($pdo, $prefix = 'EMP') {
-    $offset = strlen($prefix) + 2;
-    $stmt = $pdo->prepare("SELECT MAX(CAST(SUBSTRING(employee_id, $offset) AS UNSIGNED)) as max_num FROM (SELECT employee_id FROM users WHERE employee_id LIKE ? UNION ALL SELECT employee_id FROM admin_users WHERE employee_id LIKE ?) combined");
-    $stmt->execute([$prefix . '-%', $prefix . '-%']);
-    $row = $stmt->fetch();
-    $next = ($row && $row['max_num']) ? $row['max_num'] + 1 : 1;
-    return $prefix . '-' . str_pad($next, 4, '0', STR_PAD_LEFT);
 }
 
 function get_user_by_id($pdo, $user_id) {
@@ -330,10 +450,177 @@ function block_account($pdo, $user_table, $user_id, $reason = null) {
 
 function unblock_account($pdo, $user_table, $user_id) {
     $table = ($user_table === 'admin_users') ? 'admin_users' : 'users';
-    $new_status = ($table === 'users') ? 'approved' : 'active';
+    $new_status = ($user_table === 'admin_users') ? 'inactive' : 'offline';
     $stmt = $pdo->prepare("UPDATE $table SET account_status = ? WHERE id = ?");
     $stmt->execute([$new_status, $user_id]);
     record_status_change($pdo, $user_table, $user_id, 'blocked', $new_status);
+}
+
+/**
+ * Checks whether a username is already taken across every account table
+ * (active users, admins, and pending accounts created by a super admin).
+ */
+function username_taken($pdo, $username) {
+    $username = trim((string)$username);
+    if ($username === '') return false;
+    foreach (['users', 'admin_users', 'pending_user_accounts', 'pending_admin_accounts'] as $table) {
+        try {
+            $stmt = $pdo->prepare("SELECT 1 FROM $table WHERE username = ? LIMIT 1");
+            $stmt->execute([$username]);
+            if ($stmt->fetchColumn()) return true;
+        } catch (PDOException $e) {
+            error_log('[username_taken] ' . $table . ': ' . $e->getMessage());
+        }
+    }
+    return false;
+}
+
+function email_taken($pdo, $email) {
+    $email = trim((string)$email);
+    if ($email === '') return false;
+    foreach (['users', 'admin_users', 'pending_user_accounts', 'pending_admin_accounts'] as $table) {
+        try {
+            $where = in_array($table, ['users', 'admin_users'], true) ? 'email = ? AND is_deleted = 0' : 'email = ?';
+            $stmt = $pdo->prepare("SELECT 1 FROM $table WHERE $where LIMIT 1");
+            $stmt->execute([$email]);
+            if ($stmt->fetchColumn()) return true;
+        } catch (PDOException $e) {
+            error_log('[email_taken] ' . $table . ': ' . $e->getMessage());
+        }
+    }
+    return false;
+}
+
+function security_question_ids_are_valid($pdo, $question_ids, $required_count = 3) {
+    $ids = array_map('intval', (array)$question_ids);
+    if (count($ids) !== $required_count || in_array(0, $ids, true) || count(array_unique($ids)) !== $required_count) return false;
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM secret_questions WHERE is_active = 1 AND id IN (1, 2, 3) AND id IN ($placeholders)");
+    $stmt->execute($ids);
+    return (int)$stmt->fetchColumn() === $required_count;
+}
+
+function count_super_admin_accounts($pdo) {
+    $stmt = $pdo->query("SELECT
+        (SELECT COUNT(*) FROM admin_users WHERE role = 'super_admin') +
+        (SELECT COUNT(*) FROM pending_admin_accounts WHERE role = 'super_admin') +
+        (SELECT COUNT(*) FROM users WHERE role = 'super_admin')");
+    return (int)$stmt->fetchColumn();
+}
+
+function activate_admin_account($pdo, $target_id, $actor_role = null, $actor_id = null, $actor_name = null) {
+    try {
+        $actor_role = (string)$actor_role;
+        if ($actor_role !== 'super_admin') {
+            return ['success' => false, 'message' => 'Only a super admin can activate admin accounts.'];
+        }
+
+        $stmt = $pdo->prepare("SELECT id, username, full_name, role, account_status FROM admin_users WHERE id = ?");
+        $stmt->execute([$target_id]);
+        $target = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$target) {
+            return ['success' => false, 'message' => 'Admin account not found.'];
+        }
+        if ($target['account_status'] === 'active') {
+            return ['success' => false, 'message' => 'This admin account is already active.'];
+        }
+        if ($target['account_status'] !== 'inactive') {
+            return ['success' => false, 'message' => 'Only inactive admin accounts can be activated.'];
+        }
+        if (!in_array((string)$target['role'], ['admin', 'super_admin'], true)) {
+            return ['success' => false, 'message' => 'Only admin and super admin accounts can be activated here.'];
+        }
+
+        $role_label = ((string)$target['role'] === 'super_admin') ? 'super admin' : 'admin';
+
+        $pdo->beginTransaction();
+
+        $stmt = $pdo->prepare("SELECT id, full_name FROM admin_users WHERE id != ? AND account_status = 'active' AND role = ?");
+        $stmt->execute([$target_id, $target['role']]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $old) {
+            $upd = $pdo->prepare("UPDATE admin_users SET account_status = 'inactive', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND account_status = 'active'");
+            $upd->execute([$old['id']]);
+            if ($upd->rowCount() > 0) {
+                record_status_change($pdo, 'admin_users', $old['id'], 'active', 'inactive', 'Replaced as the active ' . $role_label . ' when "' . $target['full_name'] . '" was activated');
+            }
+        }
+
+        $from_status = $target['account_status'];
+        $upd = $pdo->prepare("UPDATE admin_users SET account_status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND account_status = 'inactive'");
+        $upd->execute([$target_id]);
+        record_status_change($pdo, 'admin_users', $target_id, $from_status, 'active', $actor_name ? ('Activated by ' . $actor_name) : 'Activated');
+
+        log_audit($pdo, 'activate_account', 'admin_users', $target_id, $target['full_name'], $role_label . ' account activated by ' . ($actor_name ?: 'an admin'));
+
+        $pdo->commit();
+        return ['success' => true, 'target' => $target];
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        error_log('[activate_admin_account] ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to activate account.'];
+    }
+}
+
+function deactivate_same_role_admins($pdo, $exclude_id, $role, $replaced_by = '') {
+    $role = (string)$role;
+    if (!in_array($role, ['super_admin', 'admin'], true)) {
+        return 0;
+    }
+    $role_label = ($role === 'super_admin') ? 'super admin' : 'admin';
+    $deactivated = 0;
+    $reason = $replaced_by !== '' ? ('Replaced as the active ' . $role_label . ' when "' . $replaced_by . '" took over the ' . $role_label . ' seat') : ('No longer holds the active ' . $role_label . ' seat');
+    $stmt = $pdo->prepare("SELECT id, full_name, username FROM admin_users WHERE id != ? AND account_status = 'active' AND role = ?");
+    $stmt->execute([$exclude_id, $role]);
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $old) {
+        $upd = $pdo->prepare("UPDATE admin_users SET account_status = 'inactive', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND account_status = 'active'");
+        $upd->execute([$old['id']]);
+        if ($upd->rowCount() > 0) {
+            $deactivated++;
+            record_status_change($pdo, 'admin_users', $old['id'], 'active', 'inactive', $reason);
+        }
+    }
+    return $deactivated;
+}
+
+function hard_delete_account($pdo, $user_table, $user_id, $keep_audit = true) {
+    $table = ($user_table === 'admin_users') ? 'admin_users' : 'users';
+
+    if ($table === 'users') {
+        $stmt = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) AS full_name, username, email FROM users WHERE id = ?");
+    } else {
+        $stmt = $pdo->prepare("SELECT full_name, username, email FROM admin_users WHERE id = ?");
+    }
+    $stmt->execute([$user_id]);
+    $info = $stmt->fetch();
+    $full_name = $info ? ($info['full_name'] ?? 'Unknown account') : 'Unknown account';
+
+    $cascade = [
+        ["security_answers", "user_table = ? AND user_id = ?", [$user_table, $user_id]],
+        ["otp_codes", "user_table = ? AND user_id = ?", [$user_table, $user_id]],
+        ["login_logs", "user_table = ? AND user_id = ?", [$user_table, $user_id]],
+        ["account_status_history", "user_table = ? AND user_id = ?", [$user_table, $user_id]],
+        ["user_permissions", "user_table = ? AND user_id = ?", [$user_table, $user_id]],
+    ];
+    if ($table === 'users') {
+        $cascade[] = ["registration_approvals", "user_id = ?", [$user_id]];
+        $cascade[] = ["rentals", "user_id = ?", [$user_id]];
+    }
+    if (!$keep_audit) {
+        $cascade[] = ["deletion_requests", "target_table = ? AND target_id = ?", [$user_table, $user_id]];
+        $cascade[] = ["account_deletion_documents", "target_table = ? AND target_id = ?", [$user_table, $user_id]];
+        $cascade[] = ["password_change_documents", "target_table = ? AND target_id = ?", [$user_table, $user_id]];
+        $cascade[] = ["block_requests", "target_table = ? AND target_id = ?", [$user_table, $user_id]];
+        $cascade[] = ["block_request_documents", "target_table = ? AND target_id = ?", [$user_table, $user_id]];
+    }
+
+    foreach ($cascade as [$tbl, $where, $params]) {
+        $pdo->prepare("DELETE FROM $tbl WHERE $where")->execute($params);
+    }
+
+    $stmt = $pdo->prepare("DELETE FROM $table WHERE id = ?");
+    $stmt->execute([$user_id]);
+
+    return ['id' => $user_id, 'full_name' => $full_name, 'username' => $info['username'] ?? '', 'email' => $info['email'] ?? ''];
 }
 
 function auto_inactivate_accounts($pdo) {
@@ -341,31 +628,22 @@ function auto_inactivate_accounts($pdo) {
         $days = defined('AUTO_INACTIVE_DAYS') ? (int)AUTO_INACTIVE_DAYS : 30;
         $cutoff = date('Y-m-d H:i:s', time() - ($days * 86400));
 
-        $admin_updated = 0;
-        $stmt = $pdo->prepare("SELECT id FROM admin_users WHERE account_status = 'active' AND (COALESCE(last_login, created_at) < ?)");
-        $stmt->execute([$cutoff]);
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $upd = $pdo->prepare("UPDATE admin_users SET account_status = 'inactive' WHERE id = ? AND account_status = 'active'");
-            $upd->execute([$row['id']]);
-            if ($upd->rowCount() > 0) {
-                record_status_change($pdo, 'admin_users', $row['id'], 'active', 'inactive', 'Automatically set to inactive (' . $days . ' days without login)');
-                $admin_updated++;
-            }
-        }
+        // Admin accounts are intentionally NOT auto-inactivated: only one active
+        // admin is allowed at a time, so auto-inactivating it would lock the admin
+        // out with no active admin left to re-activate it.
 
         $user_updated = 0;
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE account_status = 'approved' AND (COALESCE(last_login, created_at) < ?)");
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE account_status = 'approved' AND (last_login IS NULL OR last_login < ?)");
         $stmt->execute([$cutoff]);
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $upd = $pdo->prepare("UPDATE users SET account_status = 'inactive' WHERE id = ? AND account_status = 'approved'");
+            $upd = $pdo->prepare("UPDATE users SET account_status = 'offline' WHERE id = ? AND account_status = 'approved'");
             $upd->execute([$row['id']]);
             if ($upd->rowCount() > 0) {
-                record_status_change($pdo, 'users', $row['id'], 'approved', 'inactive', 'Automatically set to inactive (' . $days . ' days without login)');
                 $user_updated++;
             }
         }
 
-        return ['admins' => $admin_updated, 'users' => $user_updated];
+        return ['admins' => 0, 'users' => $user_updated];
     } catch (PDOException $e) {
         error_log("Auto-inactive error: " . $e->getMessage());
         return ['admins' => 0, 'users' => 0];
@@ -375,9 +653,9 @@ function auto_inactivate_accounts($pdo) {
 
 function get_all_users_paginated($pdo, $filters = [], $per_page = 10, $page = 1) {
     $where = ["u.is_deleted = 0"]; $params = [];
-    if (!empty($filters['search'])) {
-        $where[] = "(u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ? OR u.email LIKE ? OR u.id_number LIKE ? OR u.employee_id LIKE ?)";
-        $s = "%{$filters['search']}%"; $params = array_merge($params, [$s, $s, $s, $s, $s, $s]);
+if (!empty($filters['search'])) {
+        $where[] = "(u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ? OR u.email LIKE ? OR u.id_number LIKE ?)";
+        $s = "%{$filters['search']}%"; $params = array_merge($params, [$s, $s, $s, $s, $s]);
     }
     if (!empty($filters['role'])) { $where[] = "u.role = ?"; $params[] = $filters['role']; }
     if (!empty($filters['status'])) { $where[] = "u.account_status = ?"; $params[] = $filters['status']; }
@@ -392,8 +670,8 @@ function get_all_users_paginated($pdo, $filters = [], $per_page = 10, $page = 1)
 
 function get_all_admins_paginated($pdo, $filters = [], $per_page = 10, $page = 1) {
     $where = ["a.is_deleted = 0"]; $params = [];
-    if (!empty($filters['search'])) {
-        $where[] = "(a.full_name LIKE ? OR a.username LIKE ? OR a.email LIKE ? OR a.employee_id LIKE ?)";
+if (!empty($filters['search'])) {
+        $where[] = "(a.full_name LIKE ? OR a.username LIKE ? OR a.email LIKE ? OR a.id_number LIKE ?)";
         $s = "%{$filters['search']}%"; $params = array_merge($params, [$s, $s, $s, $s]);
     }
     if (!empty($filters['role'])) { $where[] = "a.role = ?"; $params[] = $filters['role']; }
@@ -425,13 +703,6 @@ function get_full_name($pdo, $user_table, $user_id) {
     else { $stmt = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE id = ?"); }
     $stmt->execute([$user_id]); $row = $stmt->fetch();
     return $row ? $row['full_name'] : 'Unknown';
-}
-
-function get_employee_id_by_record($pdo, $user_table, $user_id) {
-    $table = ($user_table === 'admin_users') ? 'admin_users' : 'users';
-    $stmt = $pdo->prepare("SELECT employee_id FROM $table WHERE id = ?");
-    $stmt->execute([$user_id]); $row = $stmt->fetch();
-    return $row ? ($row['employee_id'] ?? '') : '';
 }
 
 function movie_poster_url($path) {

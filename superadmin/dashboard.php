@@ -20,11 +20,13 @@ try {
     $blocked_users = $pdo->query("SELECT COUNT(*) FROM users WHERE account_status = 'blocked' AND is_deleted = 0")->fetchColumn();
     $blocked_admins = $pdo->query("SELECT COUNT(*) FROM admin_users WHERE account_status = 'blocked' AND is_deleted = 0")->fetchColumn();
     $pending_deletions = $pdo->query("SELECT COUNT(*) FROM deletion_requests WHERE status = 'pending'")->fetchColumn();
+    $pending_blocks = 0;
+    try { $pending_blocks = $pdo->query("SELECT COUNT(*) FROM block_requests WHERE status = 'pending'")->fetchColumn(); } catch (Exception $e) {}
     $total_revenue = $pdo->query("SELECT COALESCE(SUM(rental_price),0) FROM rentals WHERE status = 'approved'")->fetchColumn();
 } catch (PDOException $e) { $total_users=$total_admins=$total_movies=$pending_requests=$pending_approvals=$active_rentals=$blocked_users=$blocked_admins=$pending_deletions=$total_revenue=0; }
 
 try {
-    $recent_users = $pdo->query("SELECT id, employee_id, username, CONCAT(first_name,' ',last_name) as full_name, email, role, account_status, created_at FROM users WHERE is_deleted = 0 ORDER BY created_at DESC LIMIT 5")->fetchAll();
+    $recent_users = $pdo->query("SELECT id, id_number, username, CONCAT(first_name,' ',last_name) as full_name, email, role, account_status, created_at FROM users WHERE is_deleted = 0 ORDER BY created_at DESC LIMIT 5")->fetchAll();
 } catch (PDOException $e) { $recent_users = []; }
 
 try {
@@ -37,6 +39,23 @@ $show_edit_profile_notice = !empty($_SESSION['show_edit_profile_notice']);
 if ($show_edit_profile_notice) {
     unset($_SESSION['show_edit_profile_notice']);
 }
+
+try { $stmt = $pdo->prepare("SELECT * FROM admin_users WHERE id = ?"); $stmt->execute([$_SESSION['admin_id']]); $admin_row = $stmt->fetch(); } catch (PDOException $e) { $admin_row = null; }
+$admin_row = $admin_row ?: [];
+$profile_complete = is_profile_complete($admin_row, true);
+$cp_first = $admin_row['first_name'] ?? '';
+$cp_last = $admin_row['last_name'] ?? '';
+if (($cp_first === '' || $cp_last === '') && !empty($admin_row['full_name'])) {
+    $parts = preg_split('/\s+/', trim($admin_row['full_name']), 2);
+    if ($cp_first === '') $cp_first = $parts[0] ?? '';
+    if ($cp_last === '') $cp_last = $parts[1] ?? '';
+}
+$cp_middle = $admin_row['middle_initial'] ?? '';
+$cp_sex = $admin_row['sex'] ?? '';
+$cp_birthdate = $admin_row['birthdate'] ?? '';
+$cp_email = $admin_row['email'] ?? '';
+$cp_contact = $admin_row['contact_number'] ?? '';
+$cp_address = $admin_row['address'] ?? '';
 
 auto_inactivate_accounts($pdo);
 ?>
@@ -55,28 +74,8 @@ auto_inactivate_accounts($pdo);
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="dashboard.php" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-                <div class="sidebar-section"><div class="sidebar-section-title">Overview</div>
-                    <a href="dashboard.php" class="sidebar-link active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
-                    <a href="account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
-                    <a href="../admin/registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span>
-                        <?php if ($pending_approvals > 0): ?><span class="badge badge-warning"><?php echo $pending_approvals; ?></span><?php endif; ?>
-                    </a>
-                    <a href="deletion_requests.php" class="sidebar-link">
-                        <i class="fas fa-user-minus"></i><span>Deletion Requests</span>
-                        <?php if ($pending_deletions > 0): ?><span class="badge badge-warning"><?php echo $pending_deletions; ?></span><?php endif; ?>
-                    </a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
-                    <a href="../admin/login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Account</div>
-                    <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -92,7 +91,7 @@ auto_inactivate_accounts($pdo);
                     <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('active');"><i class="fas fa-bars"></i></button>
                     <div><h1 class="page-title">Super Admin Dashboard</h1><p class="page-subtitle">System overview and management</p></div>
                 </div>
-                <div class="header-actions"><span class="text-sm text-muted"><i class="fas fa-calendar"></i> <?php echo date('M d, Y'); ?></span></div>
+                <div class="header-actions" style="display:flex;align-items:center;gap:0.75rem;"><span class="text-sm text-muted"><i class="fas fa-calendar"></i> <?php echo date('M d, Y'); ?></span><a href="../client/logout.php" class="btn btn-sm btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
             </div>
 
             <div class="content-body">
@@ -125,7 +124,7 @@ auto_inactivate_accounts($pdo);
                                 <tbody>
 <?php foreach ($recent_users as $u): ?>
                                     <tr>
-                                        <td><strong><?php echo htmlspecialchars($u['full_name']); ?></strong><br><small class="text-muted"><?php echo htmlspecialchars($u['employee_id'] ?? $u['username']); ?></small></td>
+                                        <td><strong><?php echo htmlspecialchars($u['full_name']); ?></strong><br><small class="text-muted"><?php echo htmlspecialchars($u['id_number'] ?? $u['username']); ?></small></td>
                                         <td><?php echo render_role_badge($u['role']); ?></td>
                                         <td><?php echo render_status_badge($u['account_status']); ?></td>
                                         <td><small><?php echo date('M d', strtotime($u['created_at'])); ?></small></td>
@@ -171,14 +170,14 @@ auto_inactivate_accounts($pdo);
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.remove('active');"></div>
 
     <?php if ($show_edit_profile_notice): ?>
-    <div id="editProfileModal" class="modal" style="display:flex;">
+    <div id="editProfileModal" class="modal" style="display: flex;">
         <div class="modal-content" style="max-width:480px;">
             <div class="modal-header">
                 <h3 class="modal-title"><i class="fas fa-user-edit" style="margin-right:0.5rem;"></i> Update Your Account</h3>
                 <span class="close" onclick="document.getElementById('editProfileModal').style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
-                <p>Your password has been changed successfully. Please take a moment to review and update your account details, including your profile information and security questions.</p>
+                <p>Welcome! To keep your account secure and up to date, please take a moment to review and update your personal information, including your profile details and security questions.</p>
                 <div style="display:flex;gap:0.625rem;justify-content:flex-end;margin-top:1.25rem;">
                     <button class="btn btn-outline" onclick="document.getElementById('editProfileModal').style.display='none'">Later</button>
                     <a href="edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="btn btn-primary"><i class="fas fa-user-cog"></i> Edit My Details</a>
@@ -187,6 +186,10 @@ auto_inactivate_accounts($pdo);
         </div>
     </div>
     <script>document.getElementById('editProfileModal').addEventListener('click', function(e){ if(e.target === this) this.style.display='none'; });</script>
+    <?php endif; ?>
+
+    <?php if (!$profile_complete): ?>
+        <?php $cp_ajax = '../ajax/complete_profile.php'; $cp_is_admin = true; include __DIR__ . '/../includes/profile_completion_modal.php'; ?>
     <?php endif; ?>
 </body>
 </html>

@@ -40,6 +40,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = 'Invalid email address.';
         } elseif (!in_array($sex, ['Male', 'Female', 'Prefer not to say'], true)) {
             $error = 'Invalid sex value.';
+        } elseif (($e = validate_name_field($first_name)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_name_field($last_name)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_middle_initial($middle_initial)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_extension_name($extension_name)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_birthdate($birthdate)) !== '') {
+            $error = $e;
+        } elseif (($e = validate_ph_contact($contact_number)) !== '') {
+            $error = 'Contact number must be a valid Philippine mobile number (e.g. 0917-123-4567).';
+        } elseif (($e = validate_address_field($address_street, 'Street')) !== '') {
+            $error = $e;
+        } elseif (($e = validate_address_field($address_barangay, 'Barangay')) !== '') {
+            $error = $e;
+        } elseif (($e = validate_address_field($address_city, 'City')) !== '') {
+            $error = $e;
+        } elseif (($e = validate_address_field($address_province, 'Province')) !== '') {
+            $error = $e;
+        } elseif (($e = validate_address_field($address_country, 'Country')) !== '') {
+            $error = $e;
+        } elseif ($zip_code !== '' && (!ctype_digit($zip_code) || strlen($zip_code) < 4)) {
+            $error = 'Zip code must be a valid number (4+ digits).';
         } else {
             try {
                 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
@@ -65,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $zip_code !== '' ? $zip_code : null,
                         $user_id
                     ]);
+                    log_audit($pdo, 'profile_update', 'users', $user_id, $first_name . ' ' . $last_name, 'User account details updated');
                     $_SESSION['flash_success'] = 'User account updated successfully.';
                     redirect('edit_user.php?id=' . $user_id);
                 }
@@ -116,37 +141,8 @@ generate_csrf_token();
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="<?php echo $dash_link; ?>" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-<?php if ($is_superadmin): ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Overview</div>
-                    <a href="../superadmin/dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
-                    <a href="../superadmin/account_management.php" class="sidebar-link active"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="../superadmin/create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
-                    <a href="../superadmin/privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
-                    <a href="../superadmin/deletion_requests.php" class="sidebar-link"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
-                    <a href="login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-<?php else: ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Main</div>
-                    <a href="dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Management</div>
-                    <a href="account_management.php" class="sidebar-link active"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="manage_movies.php" class="sidebar-link"><i class="fas fa-film"></i><span>Manage Movies</span></a>
-                    <a href="manage_genres.php" class="sidebar-link"><i class="fas fa-tags"></i><span>Manage Genres</span></a>
-                    <a href="rental_requests.php" class="sidebar-link"><i class="fas fa-clipboard-list"></i><span>Rental Requests</span></a>
-                    <a href="registration_approval.php" class="sidebar-link"><i class="fas fa-user-check"></i><span>Approvals</span></a>
-                    <a href="login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-<?php endif; ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Account</div>
-                    <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="../superadmin/edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -178,8 +174,7 @@ generate_csrf_token();
                     <div class="card-body">
                         <form method="POST" action="">
                             <?php csrf_token_input(); ?>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 1rem;">
-                                <div class="form-group"><label>Employee ID</label><input type="text" class="form-control" value="<?php echo htmlspecialchars($user['employee_id'] ?? ''); ?>" readonly disabled></div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 1rem;">
                                 <div class="form-group"><label>ID Number</label><input type="text" class="form-control" value="<?php echo htmlspecialchars($user['id_number'] ?? ''); ?>" readonly disabled></div>
                                 <div class="form-group"><label>Username</label><input type="text" class="form-control" value="<?php echo htmlspecialchars($user['username'] ?? ''); ?>" readonly disabled></div>
                             </div>
@@ -198,6 +193,7 @@ generate_csrf_token();
                                     </select>
                                 </div>
                                 <div class="form-group"><label>Birthdate *</label><input type="date" name="birthdate" class="form-control" required value="<?php echo htmlspecialchars($user['birthdate']); ?>"></div>
+                                <div class="form-group"><label>Age</label><input type="text" id="ageDisplay" class="form-control" readonly value="<?php echo $user['birthdate'] ? (compute_age($user['birthdate']) . ' years') : ''; ?>" placeholder="Auto-computed from birthdate"></div>
                             </div>
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 1rem;">
                                 <div class="form-group"><label>Email *</label><input type="email" name="email" class="form-control" required maxlength="100" value="<?php echo htmlspecialchars($user['email']); ?>"></div>
@@ -219,6 +215,44 @@ generate_csrf_token();
                                 <a href="account_management.php" class="btn btn-outline">Cancel</a>
                             </div>
                         </form>
+                        <script>
+                        (function () {
+                            var bd = document.getElementsByName('birthdate')[0], age = document.getElementById('ageDisplay');
+                            if (!bd || !age) return;
+                            function upd() {
+                                var d = bd.value;
+                                if (!d) { age.value = ''; return; }
+                                var b = new Date(d), n = new Date(), y = n.getFullYear() - b.getFullYear(), m = n.getMonth() - b.getMonth();
+                                if (m < 0 || (m === 0 && n.getDate() < b.getDate())) y--;
+                                age.value = (y >= 0 && y < 200) ? y + ' years' : '';
+                            }
+                            bd.addEventListener('input', upd);
+                        })();
+                        </script>
+                        <script>
+                        (function () {
+                            function nameOk(v) {
+                                v = v.trim();
+                                if (!v) return false;
+                                if (v.length < 2 || v.length > 30) return false;
+                                if (!/^[A-Z][a-z]+(?: [A-Z][a-z]+)*$/.test(v)) return false;
+                                if (/^[A-Z]+$/.test(v)) return false;
+                                if (/[0-9]/.test(v) || /[^A-Za-z ]/.test(v)) return false;
+                                if (/(.)\1{2,}/.test(v)) return false;
+                                return true;
+                            }
+                            function phOk(v) { v = v.trim(); var n = v.replace(/[^0-9]/g, ''); if (n.indexOf('63') === 0) n = n.substring(2); if (n.indexOf('0') === 0) n = n.substring(1); return /^9\d{9}$/.test(n); }
+                            var fn = document.getElementsByName('first_name')[0], ln = document.getElementsByName('last_name')[0], cn = document.getElementsByName('contact_number')[0], mi = document.getElementsByName('middle_initial')[0];
+                            var fnS = document.createElement('small'), lnS = document.createElement('small'), cnS = document.createElement('small');
+                            [fnS, lnS, cnS].forEach(function (s) { s.style.display = 'block'; s.style.fontSize = '0.6875rem'; s.style.minHeight = '0.9em'; });
+                            fn.parentNode.appendChild(fnS); ln.parentNode.appendChild(lnS); cn.parentNode.appendChild(cnS);
+                            function set(el, ok, msg) { el.textContent = msg; el.style.color = ok ? 'var(--success)' : 'var(--danger)'; }
+                            fn.addEventListener('input', function () { var v = this.value.trim(); nameOk(v) ? set(fnS, true, 'Valid') : set(fnS, false, v ? 'First letter capital, rest lowercase, no numbers/special chars.' : ''); });
+                            ln.addEventListener('input', function () { var v = this.value.trim(); nameOk(v) ? set(lnS, true, 'Valid') : set(lnS, false, v ? 'First letter capital, rest lowercase, no numbers/special chars.' : ''); });
+                            cn.addEventListener('input', function () { var v = this.value.trim(); phOk(v) ? set(cnS, true, 'Valid') : set(cnS, false, v ? 'Use PH format, e.g. 0917-123-4567' : ''); });
+                            if (mi) mi.addEventListener('input', function () { this.value = this.value.trim() ? this.value.toUpperCase() : ''; });
+                        })();
+                        </script>
                     </div>
                 </div>
                 <?php else: ?>

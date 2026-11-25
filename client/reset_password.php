@@ -32,13 +32,14 @@ if ($new_password !== $new_password_confirm) {
 }
 
 try {
-    if ($via_otp) {
+if ($via_otp) {
         if (empty($_SESSION['reset_verified_user_id'])) {
             echo json_encode(['ok' => false, 'message' => 'Session expired. Please verify OTP again.']);
             exit;
         }
         $user_id = $_SESSION['reset_verified_user_id'];
-        unset($_SESSION['reset_verified_user_id'], $_SESSION['security_verified']);
+        $user_table = $_SESSION['reset_verified_user_table'] ?? 'users';
+        unset($_SESSION['reset_verified_user_id'], $_SESSION['reset_verified_user_table'], $_SESSION['security_verified']);
     } else {
         $username = trim($_POST['username'] ?? '');
         $question_id = intval($_POST['question_id'] ?? 0);
@@ -62,21 +63,28 @@ try {
         $stmt2->execute(['users', $user['id'], $question_id]);
         $record = $stmt2->fetch();
 
-        if (!$record || !password_verify(strtolower($security_answer), $record['answer_hash'])) {
+if (!$record || !password_verify(strtolower($security_answer), $record['answer_hash'])) {
             echo json_encode(['ok' => false, 'message' => 'Security verification failed.']);
             exit;
         }
 
         $user_id = $user['id'];
+        $user_table = 'users';
     }
 
-    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-    $update_stmt = $pdo->prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
-    $update_stmt->execute([$hashed_password, $user_id]);
+$hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+    if ($user_table === 'admin_users') {
+        $update_stmt = $pdo->prepare('UPDATE admin_users SET password = ?, must_change_password = 0, account_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+        $update_stmt->execute([$hashed_password, STATUS_ACTIVE, $user_id]);
+    } else {
+        $update_stmt = $pdo->prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+        $update_stmt->execute([$hashed_password, $user_id]);
+    }
 
     if (isset($_SESSION['login_attempts'])) {
         $_SESSION['login_attempts'] = 0;
     }
+    unset($_SESSION['reset_masked_id_number'], $_SESSION['reset_masked_email'], $_SESSION['otp_masked_id_number'], $_SESSION['otp_masked_email']);
 
     echo json_encode(['ok' => true, 'message' => 'Password reset successfully! Redirecting to login...']);
 } catch (PDOException $e) {

@@ -219,6 +219,40 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS pending_admin_accounts (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_number VARCHAR(20) DEFAULT NULL,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    role ENUM('admin','super_admin') NOT NULL DEFAULT 'admin',
+    phone VARCHAR(20) DEFAULT NULL,
+    created_by_admin_id INT UNSIGNED DEFAULT NULL,
+    created_by_name VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_pending_username (username),
+    UNIQUE KEY uq_pending_email (email),
+    UNIQUE KEY uq_pending_id_number (id_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS pending_user_accounts (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_number VARCHAR(20) DEFAULT NULL,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    created_by_admin_id INT UNSIGNED DEFAULT NULL,
+    created_by_name VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_pending_user_username (username),
+    UNIQUE KEY uq_pending_user_email (email),
+    UNIQUE KEY uq_pending_user_id_number (id_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- ============================================================
 -- 4. SEED DATA
 -- ============================================================
@@ -286,23 +320,15 @@ INSERT IGNORE INTO role_permissions (role, permission_id, granted)
 SELECT 'user', id, 1 FROM permissions
 WHERE permission_key IN ('dashboard.view', 'bikes.view', 'rentals.view', 'logs.view');
 
--- Seed secret questions (15 questions)
-INSERT IGNORE INTO secret_questions (id, question_text, sort_order) VALUES
-(1, 'What was the name of your first pet?', 1),
-(2, 'What is your favorite childhood place?', 2),
-(3, 'What was the name of your first school?', 3),
-(4, 'What is your mother''s maiden name?', 4),
-(5, 'What city were you born in?', 5),
-(6, 'What is your favorite food?', 6),
-(7, 'What is your favorite movie?', 7),
-(8, 'What is your favorite song?', 8),
-(9, 'What is your favorite color?', 9),
-(10, 'What was the make of your first car?', 10),
-(11, 'What is your father''s middle name?', 11),
-(12, 'What is your favorite sports team?', 12),
-(13, 'What was the street you grew up on?', 13),
-(14, 'Who is your best friend in Elementary?', 14),
-(15, 'Who is your favorite teacher in high school?', 15);
+-- Keep only the first three secret questions available for new selections.
+INSERT INTO secret_questions (id, question_text, sort_order, is_active) VALUES
+(1, 'What was the name of your first pet?', 1, 1),
+(2, 'What is your favorite childhood place?', 2, 1),
+(3, 'What was the name of your first school?', 3, 1)
+ON DUPLICATE KEY UPDATE question_text = VALUES(question_text), sort_order = VALUES(sort_order), is_active = 1;
+
+-- Keep old question rows so existing answer hashes remain recoverable, but hide them from new account/profile selections.
+UPDATE secret_questions SET is_active = IF(id IN (1, 2, 3), 1, 0);
 
 -- ============================================================
 -- 5. SET DEFAULTS FOR EXISTING DATA
@@ -329,6 +355,67 @@ CREATE INDEX IF NOT EXISTS idx_admin_account_status ON admin_users(account_statu
 CREATE INDEX IF NOT EXISTS idx_admin_role ON admin_users(role);
 CREATE INDEX IF NOT EXISTS idx_rental_status ON rental_requests(status);
 CREATE INDEX IF NOT EXISTS idx_bikes_availability ON bikes(availability);
+
+-- ============================================================
+-- 6b. ALLOW ADMINS TO EDIT ADMIN ACCOUNT INFO (RBAC)
+-- ============================================================
+INSERT IGNORE INTO role_permissions (role, permission_id, granted)
+SELECT 'admin', id, 1 FROM permissions WHERE permission_key = 'admins.update';
+
+-- ============================================================
+-- 6c. MOVIE MANAGEMENT: ONLY SUPER ADMIN DELETES MOVIES
+-- ============================================================
+
+-- Admins may no longer delete movies directly; they submit deletion
+-- requests (reason + document + password) that only the Super Admin
+-- can approve. Admin edits also require reason + document + password.
+UPDATE role_permissions rp JOIN permissions p ON rp.permission_id = p.id
+SET rp.granted = 0
+WHERE rp.role = 'admin' AND p.permission_key = 'movies.delete';
+
+CREATE TABLE IF NOT EXISTS movie_deletion_requests (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT UNSIGNED NOT NULL,
+    movie_title VARCHAR(255) NOT NULL,
+    reason TEXT NOT NULL,
+    requested_by_id INT UNSIGNED NOT NULL,
+    requested_by_name VARCHAR(100) NOT NULL,
+    status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    reviewed_by_id INT UNSIGNED DEFAULT NULL,
+    reviewed_by_name VARCHAR(100) DEFAULT NULL,
+    review_notes TEXT DEFAULT NULL,
+    reviewed_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_mdr_status (status),
+    INDEX idx_mdr_movie (movie_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS movie_deletion_documents (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    request_id INT UNSIGNED NOT NULL,
+    movie_id INT UNSIGNED NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_size INT UNSIGNED NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_mdd_request (request_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS movie_edit_logs (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT UNSIGNED NOT NULL,
+    movie_title VARCHAR(255) NOT NULL,
+    reason TEXT NOT NULL,
+    file_path VARCHAR(255) DEFAULT NULL,
+    original_name VARCHAR(255) DEFAULT NULL,
+    file_size INT UNSIGNED DEFAULT NULL,
+    mime_type VARCHAR(100) DEFAULT NULL,
+    edited_by_id INT UNSIGNED NOT NULL,
+    edited_by_name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_mel_movie (movie_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
 -- 7. DONE

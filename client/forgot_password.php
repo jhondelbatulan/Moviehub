@@ -17,25 +17,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error = 'Invalid security token. Please try again.';
     } else {
         $id_number = trim($_POST['id_number'] ?? '');
+        unset($_SESSION['reset_masked_id_number'], $_SESSION['reset_masked_email']);
         if ($id_number === '') {
             $error = 'Please enter your ID number.';
         } elseif (!preg_match('/^\d{4}-\d{4}$/', $id_number)) {
             $error = 'ID number must be in the format xxxx-xxxx (e.g. 1234-5678).';
         } else {
             try {
-                $stmt = $pdo->prepare("SELECT id, email, CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE id_number = ? AND is_deleted = 0");
+                $user = null;
+                $user_table = '';
+                $full_name = '';
+                $stmt = $pdo->prepare("SELECT id, email, CONCAT(first_name, ' ', last_name) AS full_name FROM users WHERE id_number = ? AND is_deleted = 0");
                 $stmt->execute([$id_number]);
-                $user = $stmt->fetch();
+                $found = $stmt->fetch();
+                if ($found) {
+                    $user = $found;
+                    $user_table = 'users';
+                    $full_name = $found['full_name'];
+                } else {
+                    $stmt = $pdo->prepare("SELECT id, email, full_name FROM admin_users WHERE id_number = ? AND is_deleted = 0");
+                    $stmt->execute([$id_number]);
+                    $found = $stmt->fetch();
+                    if ($found) {
+                        $user = $found;
+                        $user_table = 'admin_users';
+                        $full_name = $found['full_name'];
+                    }
+                }
                 if (!$user) {
                     $error = 'ID number doesn\'t exist.';
                 } else {
-                    if (!can_resend_otp($pdo, 'users', $user['id'], 'password_reset')) {
+                    $_SESSION['reset_masked_id_number'] = mask_id_number($id_number);
+                    $_SESSION['reset_masked_email'] = mask_email($user['email']);
+                    if (!can_resend_otp($pdo, $user_table, $user['id'], 'password_reset')) {
                         $error = 'Too many OTP requests. Please wait before trying again.';
                     } else {
-                        $otp = create_otp($pdo, 'users', $user['id'], 'password_reset');
+                        $otp = create_otp($pdo, $user_table, $user['id'], 'password_reset');
                         $_SESSION['otp_user_id'] = $user['id'];
+                        $_SESSION['otp_user_table'] = $user_table;
                         $_SESSION['otp_purpose'] = 'password_reset';
-                        send_otp_email($user['email'], $otp, $user['full_name']);
+                        $_SESSION['otp_masked_id_number'] = $_SESSION['reset_masked_id_number'];
+                        $_SESSION['otp_masked_email'] = $_SESSION['reset_masked_email'];
+                        send_otp_email($user['email'], $otp, $full_name);
                         $masked_email = mask_email($user['email']);
                         $success = 'An OTP has been sent to your registered email (' . $masked_email . ').';
                         header('Location: verify_otp.php');

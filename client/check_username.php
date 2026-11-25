@@ -1,7 +1,9 @@
 <?php
 session_start();
 header('Content-Type: application/json');
+require_once '../config.php';
 require_once '../db_connect.php';
+require_once '../includes/functions.php';
 
 $username = isset($_GET['username']) ? trim($_GET['username']) : '';
 if ($username === '') {
@@ -10,9 +12,7 @@ if ($username === '') {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT 1 FROM users WHERE username = ? LIMIT 1");
-    $stmt->execute([$username]);
-    $exists = (bool)$stmt->fetchColumn();
+    $exists = username_taken($pdo, $username);
     echo json_encode(['ok' => true, 'available' => !$exists]);
 } catch (Throwable $e) {
     http_response_code(500);

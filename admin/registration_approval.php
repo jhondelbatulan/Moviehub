@@ -22,6 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $admin_notes = trim($_POST['admin_notes'] ?? '');
 
         if ($user_id > 0 && in_array($action, ['approve', 'reject'])) {
+            if (($_POST['admin_password'] ?? '') === '') {
+                $error = 'Please enter your current password to confirm this action.';
+            } elseif (!check_user_password($pdo, 'admin_users', $_SESSION['admin_id'], $_POST['admin_password'] ?? '')) {
+                $error = 'Inputted password is wrong.';
+            } else {
             try {
                 $pdo->beginTransaction();
 
@@ -43,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $stmt->execute([$new_status, $user_id]);
 
                     record_status_change($pdo, 'users', $user_id, STATUS_PENDING, $new_status, $admin_notes);
+                    log_audit($pdo, $action === 'approve' ? 'registration_approved' : 'registration_rejected', 'users', $user_id, $approval['username'], ($action === 'approve' ? 'Registration approved' : 'Registration rejected') . ($admin_notes !== '' ? ': ' . $admin_notes : ''));
 
                     $pdo->commit();
 
@@ -53,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $pdo->rollBack();
                 error_log('[registration_approval] ' . $e->getMessage());
                 $error = 'An error occurred. Please try again.';
+            }
             }
         }
     }
@@ -96,7 +103,7 @@ if ($show_pending) {
     $pagination_pending = paginate($filtered_total, $page, $per_page);
     try {
         $stmt = $pdo->prepare("
-            SELECT ra.*, u.id as uid, u.username, u.email, u.first_name, u.last_name, u.id_number, u.employee_id,
+            SELECT ra.*, u.id as uid, u.username, u.email, u.first_name, u.last_name, u.id_number,
                    u.sex, u.birthdate, u.contact_number, u.address_street, u.address_barangay, u.address_city,
                    u.address_province, u.address_country, u.zip_code
             FROM registration_approvals ra
@@ -128,7 +135,7 @@ if ($show_processed && $status_filter !== 'pending') {
     $pagination_processed = paginate($processed_total, $ppage, $per_page);
     try {
         $stmt = $pdo->prepare("
-            SELECT ra.*, u.username, u.email, u.first_name, u.last_name, u.id_number, u.employee_id,
+            SELECT ra.*, u.username, u.email, u.first_name, u.last_name, u.id_number,
                    au.full_name as reviewed_by_name
             FROM registration_approvals ra
             JOIN users u ON ra.user_id = u.id
@@ -159,37 +166,8 @@ generate_csrf_token();
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="<?php echo ($_SESSION['admin_role'] ?? '') === 'super_admin' ? '../superadmin/dashboard.php' : 'dashboard.php'; ?>" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-<?php if (($_SESSION['admin_role'] ?? '') === 'super_admin'): ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Overview</div>
-                    <a href="../superadmin/dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">User Management</div>
-                    <a href="../superadmin/account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="../superadmin/create_account.php" class="sidebar-link"><i class="fas fa-user-plus"></i><span>Create Account</span></a>
-                    <a href="registration_approval.php" class="sidebar-link active"><i class="fas fa-user-check"></i><span>Registration Approvals</span></a>
-                    <a href="../superadmin/privilege_management.php" class="sidebar-link"><i class="fas fa-shield-alt"></i><span>Privileges</span></a>
-                    <a href="../superadmin/deletion_requests.php" class="sidebar-link"><i class="fas fa-user-minus"></i><span>Deletion Requests</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Activity</div>
-                    <a href="login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-<?php else: ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Main</div>
-                    <a href="dashboard.php" class="sidebar-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section"><div class="sidebar-section-title">Management</div>
-                    <a href="account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="manage_movies.php" class="sidebar-link"><i class="fas fa-film"></i><span>Manage Movies</span></a>
-                    <a href="manage_genres.php" class="sidebar-link"><i class="fas fa-tags"></i><span>Manage Genres</span></a>
-                    <a href="rental_requests.php" class="sidebar-link"><i class="fas fa-clipboard-list"></i><span>Rental Requests</span></a>
-                    <a href="registration_approval.php" class="sidebar-link active"><i class="fas fa-user-check"></i><span>Approvals</span></a>
-                    <a href="login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-<?php endif; ?>
-                <div class="sidebar-section"><div class="sidebar-section-title">Account</div>
-                    <a href="../client/logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="../superadmin/edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm" style="background:var(--primary);color:white;"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -264,14 +242,13 @@ generate_csrf_token();
                                 <div><strong>Username:</strong> <?php echo htmlspecialchars($reg['username']); ?></div>
                                 <div><strong>Email:</strong> <?php echo htmlspecialchars($reg['email']); ?></div>
                                 <div><strong>ID Number:</strong> <?php echo htmlspecialchars($reg['id_number']); ?></div>
-                                <div><strong>Employee ID:</strong> <?php echo htmlspecialchars($reg['employee_id']); ?></div>
                                 <div><strong>Sex:</strong> <?php echo htmlspecialchars($reg['sex']); ?></div>
                                 <div><strong>Birthdate:</strong> <?php echo htmlspecialchars($reg['birthdate']); ?></div>
                                 <div><strong>Contact:</strong> <?php echo htmlspecialchars($reg['contact_number']); ?></div>
                                 <div><strong>Address:</strong> <?php echo htmlspecialchars(implode(', ', array_filter([$reg['address_street'], $reg['address_barangay'], $reg['address_city'], $reg['address_province'], $reg['address_country'], $reg['zip_code']]))); ?></div>
                             </div>
 
-                            <form method="POST" action="" style="margin-top:1rem;">
+                            <form method="POST" action="" style="margin-top:1rem;" class="approval-form" data-name="<?php echo htmlspecialchars($reg['first_name'].' '.$reg['last_name']); ?>">
                                 <?php csrf_token_input(); ?>
                                 <input type="hidden" name="user_id" value="<?php echo $reg['uid']; ?>">
                                 <div class="form-group">
@@ -279,8 +256,8 @@ generate_csrf_token();
                                     <textarea name="admin_notes" class="form-control" rows="2" placeholder="Add notes about this decision..."></textarea>
                                 </div>
                                 <div class="flex gap-3">
-                                    <button type="submit" name="action" value="approve" class="btn btn-success" style="flex:1;"><i class="fas fa-check"></i> Approve</button>
-                                    <button type="submit" name="action" value="reject" class="btn btn-danger" style="flex:1;"><i class="fas fa-times"></i> Reject</button>
+                                    <button type="button" name="action" value="approve" class="btn btn-success" style="flex:1;" onclick="openApprovalModal(this, 'approve')"><i class="fas fa-check"></i> Approve</button>
+                                    <button type="button" name="action" value="reject" class="btn btn-danger" style="flex:1;" onclick="openApprovalModal(this, 'reject')"><i class="fas fa-times"></i> Reject</button>
                                 </div>
                             </form>
                         </div>
@@ -342,6 +319,65 @@ generate_csrf_token();
         </div>
     </div>
 
+    <div id="approvalModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:440px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="approvalModalTitle"><i class="fas fa-check" style="color:var(--success);"></i> Approve Registration</h3>
+                <button type="button" class="modal-close" onclick="closeApprovalModal()" style="background:none;border:none;font-size:1.25rem;color:var(--muted);cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" style="font-size:0.8125rem;">
+                    <i class="fas fa-exclamation-triangle"></i> You are about to <strong id="approvalActionLabel">approve</strong> the registration of <strong id="approvalTargetName"></strong>.
+                </div>
+                <div class="form-group">
+                    <label for="approvalPassword">Your Password (to confirm) *</label>
+                    <input type="password" id="approvalPassword" class="form-control" autocomplete="off" placeholder="Enter YOUR current password to confirm">
+                </div>
+                <div id="approvalValidation" class="alert alert-danger" style="display:none;font-size:0.8125rem;"></div>
+            </div>
+            <div class="modal-footer" style="display:flex;gap:0.5rem;padding:1rem 1.5rem;border-top:1px solid var(--border);">
+                <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeApprovalModal()">Cancel</button>
+                <button type="button" class="btn btn-success" style="flex:1;" id="approvalConfirmBtn" onclick="confirmApproval()"><i class="fas fa-check"></i> Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.remove('active');"></div>
+
+    <script>
+        var activeApprovalForm = null;
+        var activeApprovalAction = '';
+        function openApprovalModal(btn, action) {
+            activeApprovalForm = btn.closest('form');
+            activeApprovalAction = action;
+            var isApprove = action === 'approve';
+            document.getElementById('approvalTargetName').textContent = activeApprovalForm.getAttribute('data-name');
+            document.getElementById('approvalActionLabel').textContent = isApprove ? 'approve' : 'reject';
+            document.getElementById('approvalModalTitle').innerHTML = '<i class="fas fa-' + (isApprove ? 'check' : 'times') + '" style="color:' + (isApprove ? 'var(--success)' : 'var(--danger)') + ';"></i> ' + (isApprove ? 'Approve' : 'Reject') + ' Registration';
+            document.getElementById('approvalConfirmBtn').className = isApprove ? 'btn btn-success' : 'btn btn-danger';
+            document.getElementById('approvalConfirmBtn').innerHTML = '<i class="fas fa-' + (isApprove ? 'check' : 'times') + '"></i> ' + (isApprove ? 'Approve' : 'Reject');
+            document.getElementById('approvalPassword').value = '';
+            document.getElementById('approvalValidation').style.display = 'none';
+            document.getElementById('approvalModal').style.display = 'flex';
+            document.getElementById('approvalPassword').focus();
+        }
+        function closeApprovalModal() { document.getElementById('approvalModal').style.display = 'none'; activeApprovalForm = null; }
+        function confirmApproval() {
+            if (!activeApprovalForm) return;
+            var form = activeApprovalForm;
+            var password = document.getElementById('approvalPassword').value;
+            var val = document.getElementById('approvalValidation');
+            if (!password) { val.textContent = 'You must enter your current password to confirm.'; val.style.display = 'block'; return; }
+            val.style.display = 'none';
+            var actionInput = document.createElement('input');
+            actionInput.type = 'hidden'; actionInput.name = 'action'; actionInput.value = activeApprovalAction;
+            form.appendChild(actionInput);
+            var pwdInput = document.createElement('input');
+            pwdInput.type = 'hidden'; pwdInput.name = 'admin_password'; pwdInput.value = password;
+            form.appendChild(pwdInput);
+            closeApprovalModal();
+            form.submit();
+        }
+    </script>
 </body>
 </html>

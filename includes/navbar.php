@@ -10,6 +10,7 @@ $basePath = ($inClient || $inAdmin || $inSuper) ? '../' : '';
 
 $isAdminSession = isset($_SESSION['admin_id']) || isset($_SESSION['super_admin_id']);
 $isUserSession = !$isAdminSession && isset($_SESSION['user_id']);
+$isClientDashboard = $isUserSession && basename($currentScript) === 'dashboard.php';
 
 // Active-link detection
 $uri = $_SERVER['REQUEST_URI'] ?? '';
@@ -61,7 +62,7 @@ if ($isAdminSession):
             <?php endif; ?>
             <span><?php echo htmlspecialchars($userName); ?></span>
         </a>
-        <a href="<?php echo $basePath; ?>client/logout.php" class="btn btn-sm btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <?php if (!$isClientDashboard): ?><a href="<?php echo $basePath; ?>client/logout.php" class="btn btn-sm btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</a><?php endif; ?>
         <button class="mh-burger" onclick="document.getElementById('mhNavLinks').classList.toggle('open')" aria-label="Menu"><i class="fas fa-bars"></i></button>
     </div>
 </nav>

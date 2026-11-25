@@ -28,18 +28,20 @@ CREATE TABLE IF NOT EXISTS users (
     employee_id VARCHAR(20) DEFAULT NULL,
     username VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL,
-    account_status ENUM('pending','approved','rejected','blocked') NOT NULL DEFAULT 'pending',
+    account_status ENUM('pending','approved','rejected','blocked','inactive','online','offline') NOT NULL DEFAULT 'pending',
     role ENUM('user','admin','super_admin') NOT NULL DEFAULT 'user',
     password VARCHAR(255) NOT NULL,
-    first_name VARCHAR(50) NOT NULL,
+    first_name VARCHAR(50) DEFAULT NULL,
     middle_initial CHAR(1) DEFAULT NULL,
-    last_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) DEFAULT NULL,
     extension_name VARCHAR(10) DEFAULT NULL,
-    sex ENUM('Male','Female','Prefer not to say') NOT NULL,
-    birthdate DATE NOT NULL,
-    contact_number VARCHAR(20) NOT NULL,
-    security_question VARCHAR(255) NOT NULL,
-    security_answer_hash VARCHAR(255) NOT NULL,
+    sex ENUM('Male','Female','Prefer not to say') DEFAULT NULL,
+    birthdate DATE DEFAULT NULL,
+    contact_number VARCHAR(20) DEFAULT NULL,
+    security_question VARCHAR(255) DEFAULT NULL,
+    security_answer_hash VARCHAR(255) DEFAULT NULL,
+    must_change_password TINYINT(1) NOT NULL DEFAULT 0,
+    last_login DATETIME DEFAULT NULL,
     address_street VARCHAR(100) DEFAULT NULL,
     address_barangay VARCHAR(100) DEFAULT NULL,
     address_city VARCHAR(100) DEFAULT NULL,
@@ -65,9 +67,18 @@ CREATE TABLE IF NOT EXISTS admin_users (
     email VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(50) DEFAULT NULL,
+    middle_initial CHAR(1) DEFAULT NULL,
+    last_name VARCHAR(50) DEFAULT NULL,
+    sex ENUM('Male','Female','Prefer not to say') DEFAULT NULL,
+    birthdate DATE DEFAULT NULL,
+    contact_number VARCHAR(20) DEFAULT NULL,
     role ENUM('admin','super_admin') NOT NULL DEFAULT 'admin',
-    account_status ENUM('active','blocked') NOT NULL DEFAULT 'active',
+    account_status ENUM('active','blocked','inactive') NOT NULL DEFAULT 'active',
+    must_change_password TINYINT(1) NOT NULL DEFAULT 0,
+    last_login DATETIME DEFAULT NULL,
     employee_id VARCHAR(20) DEFAULT NULL,
+    id_number VARCHAR(20) DEFAULT NULL,
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
     profile_picture VARCHAR(255) DEFAULT NULL,
     phone VARCHAR(20) DEFAULT NULL,
@@ -78,8 +89,43 @@ CREATE TABLE IF NOT EXISTS admin_users (
     UNIQUE KEY username (username),
     UNIQUE KEY email (email),
     UNIQUE KEY employee_id (employee_id),
+    UNIQUE KEY id_number (id_number),
     KEY idx_admin_account_status (account_status),
     KEY idx_admin_role (role)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS pending_admin_accounts (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_number VARCHAR(20) DEFAULT NULL,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    role ENUM('admin','super_admin') NOT NULL DEFAULT 'admin',
+    phone VARCHAR(20) DEFAULT NULL,
+    created_by_admin_id INT UNSIGNED DEFAULT NULL,
+    created_by_name VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_pending_username (username),
+    UNIQUE KEY uq_pending_email (email),
+    UNIQUE KEY uq_pending_id_number (id_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS pending_user_accounts (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_number VARCHAR(20) DEFAULT NULL,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    created_by_admin_id INT UNSIGNED DEFAULT NULL,
+    created_by_name VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_pending_user_username (username),
+    UNIQUE KEY uq_pending_user_email (email),
+    UNIQUE KEY uq_pending_user_id_number (id_number)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS permissions (
@@ -346,7 +392,10 @@ FROM bike_rental_system.otp_codes;
 
 INSERT INTO secret_questions (id, question_text, is_active, sort_order, created_at)
 SELECT id, question_text, is_active, sort_order, created_at
-FROM bike_rental_system.secret_questions;
+FROM bike_rental_system.secret_questions
+WHERE id IN (1, 2, 3);
+
+UPDATE secret_questions SET is_active = IF(id IN (1, 2, 3), 1, 0);
 
 INSERT INTO security_answers (id, user_table, user_id, question_id, answer_hash, created_at)
 SELECT id, user_table, user_id, question_id, answer_hash, created_at

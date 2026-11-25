@@ -71,6 +71,7 @@ $pending_count = 0;
 foreach ($rental_requests as $r) { if ($r['status'] == 'pending') $pending_count++; }
 
 try { $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?"); $stmt->execute([$_SESSION['user_id']]); $user = $stmt->fetch(); } catch (PDOException $e) { $user = null; }
+$profile_data = $user ?: [];
 $active_count = 0;
 $completed_count = 0;
 foreach ($rental_requests as $r) {
@@ -98,7 +99,7 @@ generate_csrf_token();
                 <h1 class="page-title">Dashboard</h1>
                 <p class="page-subtitle">Welcome back, <?php echo htmlspecialchars($_SESSION['full_name']); ?>!</p>
             </div>
-            <div class="header-actions"><span class="text-sm text-muted"><i class="fas fa-calendar"></i> <?php echo date('M d, Y'); ?></span></div>
+            <div class="header-actions" style="display:flex;align-items:center;gap:0.75rem;"><span class="text-sm text-muted"><i class="fas fa-calendar"></i> <?php echo date('M d, Y'); ?></span><a href="logout.php" class="btn btn-sm btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
         </div>
 
             <div class="content-body">
@@ -199,7 +200,7 @@ generate_csrf_token();
             var d = parseInt(document.getElementById('expected_days').value || '0', 10);
             document.getElementById('total_amount').value = d > 0 ? '<?php echo CURRENCY_SYMBOL; ?>' + (currentMoviePrice * d).toFixed(2) : '';
         }
-        window.onclick = function(e) { if (e.target == document.getElementById('rentalModal')) closeRentalModal(); };
+window.onclick = function(e) { if (e.target == document.getElementById('rentalModal')) closeRentalModal(); };
         <?php if ($rent_movie): ?>
         openRentalModal(<?php echo (int)$rent_movie['movie_id']; ?>, <?php echo json_encode(htmlspecialchars($rent_movie['title'], ENT_QUOTES)); ?>, <?php echo (float)$rent_movie['rental_price']; ?>);
         <?php endif; ?>

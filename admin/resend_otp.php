@@ -32,9 +32,15 @@ if (!can_resend_otp($pdo, $user_table, $user_id, $purpose)) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT full_name, email FROM admin_users WHERE id = ?");
-$stmt->execute([$user_id]);
-$admin = $stmt->fetch();
+if ($user_table === 'users') {
+    $stmt = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) as full_name, email FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $admin = $stmt->fetch();
+} else {
+    $stmt = $pdo->prepare("SELECT full_name, email FROM admin_users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $admin = $stmt->fetch();
+}
 
 if (!$admin) {
     echo json_encode(['ok' => false, 'message' => 'Account not found.']);

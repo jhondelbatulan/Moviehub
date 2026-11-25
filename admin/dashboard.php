@@ -67,6 +67,23 @@ $show_edit_profile_notice = !empty($_SESSION['show_edit_profile_notice']);
 if ($show_edit_profile_notice) {
     unset($_SESSION['show_edit_profile_notice']);
 }
+
+try { $stmt = $pdo->prepare("SELECT * FROM admin_users WHERE id = ?"); $stmt->execute([$_SESSION['admin_id']]); $admin_row = $stmt->fetch(); } catch (PDOException $e) { $admin_row = null; }
+$admin_row = $admin_row ?: [];
+$profile_complete = is_profile_complete($admin_row, true);
+$cp_first = $admin_row['first_name'] ?? '';
+$cp_last = $admin_row['last_name'] ?? '';
+if (($cp_first === '' || $cp_last === '') && !empty($admin_row['full_name'])) {
+    $parts = preg_split('/\s+/', trim($admin_row['full_name']), 2);
+    if ($cp_first === '') $cp_first = $parts[0] ?? '';
+    if ($cp_last === '') $cp_last = $parts[1] ?? '';
+}
+$cp_middle = $admin_row['middle_initial'] ?? '';
+$cp_sex = $admin_row['sex'] ?? '';
+$cp_birthdate = $admin_row['birthdate'] ?? '';
+$cp_email = $admin_row['email'] ?? '';
+$cp_contact = $admin_row['contact_number'] ?? '';
+$cp_address = $admin_row['address'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -83,30 +100,8 @@ if ($show_edit_profile_notice) {
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><a href="dashboard.php" class="sidebar-logo"><i class="fas fa-film"></i><span>MovieHub</span></a></div>
             <nav class="sidebar-nav">
-                <div class="sidebar-section">
-                    <div class="sidebar-section-title">Main</div>
-                    <a href="dashboard.php" class="sidebar-link active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                </div>
-                <div class="sidebar-section">
-                    <div class="sidebar-section-title">Management</div>
-                    <a href="account_management.php" class="sidebar-link"><i class="fas fa-users-cog"></i><span>Account Management</span></a>
-                    <a href="manage_movies.php" class="sidebar-link"><i class="fas fa-film"></i><span>Manage Movies</span></a>
-                    <a href="manage_genres.php" class="sidebar-link"><i class="fas fa-tags"></i><span>Manage Genres</span></a>
-                    <a href="rental_requests.php" class="sidebar-link">
-                        <i class="fas fa-clipboard-list"></i><span>Rental Requests</span>
-                        <?php if ($pending_requests > 0): ?><span class="badge badge-warning"><?php echo $pending_requests; ?></span><?php endif; ?>
-                    </a>
-                    <a href="registration_approval.php" class="sidebar-link">
-                        <i class="fas fa-user-check"></i><span>Approvals</span>
-                        <?php if ($pending_approvals > 0): ?><span class="badge badge-warning"><?php echo $pending_approvals; ?></span><?php endif; ?>
-                    </a>
-                    <a href="login_logs.php" class="sidebar-link"><i class="fas fa-history"></i><span>Login Logs</span></a>
-                </div>
-                <div class="sidebar-section">
-                    <div class="sidebar-section-title">Account</div>
-                    <a href="logout.php" class="sidebar-link"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
-                </div>
-            </nav>
+<?php require __DIR__ . '/../includes/sidebar_navigation.php'; ?>
+</nav>
             <a href="../superadmin/edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="sidebar-user" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;color:inherit;text-decoration:none;transition:background 0.15s;cursor:pointer;" title="Edit my profile">
                 <div class="avatar avatar-sm"><?php echo strtoupper(substr($_SESSION['admin_full_name'], 0, 1)); ?></div>
                 <div class="sidebar-user-info">
@@ -129,6 +124,7 @@ if ($show_edit_profile_notice) {
                     <a href="manage_movies.php" class="btn btn-sm btn-outline"><i class="fas fa-plus"></i> Add Movie</a>
                     <a href="rental_requests.php?status=pending" class="btn btn-sm btn-primary"><i class="fas fa-clipboard-check"></i> Process Rentals</a>
                     <span class="text-sm text-muted"><i class="fas fa-calendar"></i> <?php echo date('M d, Y'); ?></span>
+                    <a href="../client/logout.php" class="btn btn-sm btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
 
@@ -251,14 +247,14 @@ if ($show_edit_profile_notice) {
     </script>
 
     <?php if ($show_edit_profile_notice): ?>
-    <div id="editProfileModal" class="modal" style="display:flex;">
+    <div id="editProfileModal" class="modal" style="display: flex;">
         <div class="modal-content" style="max-width:480px;">
             <div class="modal-header">
                 <h3 class="modal-title"><i class="fas fa-user-edit" style="margin-right:0.5rem;"></i> Update Your Account</h3>
                 <span class="close" onclick="document.getElementById('editProfileModal').style.display='none'">&times;</span>
             </div>
             <div class="modal-body">
-                <p>Your password has been changed successfully. Please take a moment to review and update your account details, including your profile information and security questions.</p>
+                <p>Welcome! To keep your account secure and up to date, please take a moment to review and update your personal information, including your profile details and security questions.</p>
                 <div style="display:flex;gap:0.625rem;justify-content:flex-end;margin-top:1.25rem;">
                     <button class="btn btn-outline" onclick="document.getElementById('editProfileModal').style.display='none'">Later</button>
                     <a href="../superadmin/edit_admin.php?id=<?php echo (int)$_SESSION['admin_id']; ?>" class="btn btn-primary"><i class="fas fa-user-cog"></i> Edit My Details</a>
@@ -267,6 +263,10 @@ if ($show_edit_profile_notice) {
         </div>
     </div>
     <script>document.getElementById('editProfileModal').addEventListener('click', function(e){ if(e.target === this) this.style.display='none'; });</script>
+    <?php endif; ?>
+
+    <?php if (!$profile_complete): ?>
+        <?php $cp_ajax = '../ajax/complete_profile.php'; $cp_is_admin = true; include __DIR__ . '/../includes/profile_completion_modal.php'; ?>
     <?php endif; ?>
 </body>
 </html>

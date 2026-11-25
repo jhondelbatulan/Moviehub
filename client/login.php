@@ -36,14 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
             $stmt->execute([$username, $username]);
             $existingUser = $stmt->fetch();
             if ($existingUser && $existingUser['account_status'] === STATUS_BLOCKED) {
-                $error = 'Your account is blocked. Please contact support.';
+                $error = 'Account is blocked';
             } else {
-            $result = $auth->login_user($username, $password);
-            if ($result['success']) {
+$result = $auth->login_user($username, $password);
+$admin_msg = '';
+if ($result['success']) {
                 $_SESSION['login_attempts'] = 0;
                 $_SESSION['lockout_until'] = 0;
-                if ($_SESSION['user_role'] === ROLE_SUPER_ADMIN) {
-                    header('Location: ../superadmin/dashboard.php');
+                if (!empty($result['otp_required'])) {
+                    header('Location: otp_login.php');
                 } else {
                     header('Location: dashboard.php');
                 }
@@ -53,13 +54,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
                 if ($result2['success']) {
                     $_SESSION['login_attempts'] = 0;
                     $_SESSION['lockout_until'] = 0;
-                    if (!empty($_SESSION['must_change_password'])) {
+                    if (!empty($_SESSION['pending_admin_setup'])) {
+                        header('Location: ../admin/change_password.php');
+                    } elseif (!empty($_SESSION['must_change_password'])) {
                         header('Location: ../admin/change_password.php');
                     } elseif (($result2['role'] ?? '') === 'super_admin') {
                         header('Location: ../superadmin/dashboard.php');
                     } else {
                         header('Location: ../admin/dashboard.php');
                     }
+                    exit();
+                } else {
+                    $admin_msg = $result2['message'] ?? '';
+                }
+                $result3 = $auth->login_pending_user($username, $password);
+                if ($result3['success']) {
+                    $_SESSION['login_attempts'] = 0;
+                    $_SESSION['lockout_until'] = 0;
+                    header('Location: change_password.php');
                     exit();
                 }
                 $_SESSION['login_attempts']++;
@@ -71,6 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$blocked) {
                     $blocked = true;
                 }
                 $error = $result['message'] ?? 'Invalid username or password.';
+                if ($admin_msg !== '' && $admin_msg !== 'Invalid username or password.') {
+                    $error = $admin_msg;
+                }
             }
             }
         }

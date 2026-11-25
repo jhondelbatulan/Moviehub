@@ -14,12 +14,20 @@ $user_id = $_SESSION['reset_verified_user_id'];
 $user_table = $_SESSION['reset_verified_user_table'] ?? 'admin_users';
 
 try {
-    $stmt = $pdo->prepare('SELECT full_name FROM admin_users WHERE id = ? AND is_deleted = 0');
-    $stmt->execute([$user_id]);
+    if ($user_table === 'users') {
+        $stmt = $pdo->prepare('SELECT first_name, last_name FROM users WHERE id = ? AND is_deleted = 0');
+        $stmt->execute([$user_id]);
+    } else {
+        $stmt = $pdo->prepare('SELECT full_name FROM admin_users WHERE id = ? AND is_deleted = 0');
+        $stmt->execute([$user_id]);
+    }
     $user = $stmt->fetch();
     if (!$user) { header('Location: forgot_password.php'); exit(); }
 
-    $allQuestions = $pdo->query('SELECT id, question_text FROM secret_questions ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->prepare('SELECT sa.question_id AS id, sq.question_text FROM security_answers sa JOIN secret_questions sq ON sq.id = sa.question_id WHERE sa.user_table = ? AND sa.user_id = ? ORDER BY sa.id LIMIT 3');
+    $stmt->execute([$user_table, $user_id]);
+    $registeredQuestions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (count($registeredQuestions) !== 3) { header('Location: forgot_password.php'); exit(); }
 } catch (PDOException $e) {
     header('Location: forgot_password.php');
     exit();
@@ -36,10 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $question_ids = array_map('intval', array_filter([$_POST['q1'] ?? '', $_POST['q2'] ?? '', $_POST['q3'] ?? ''], function ($v) { return $v !== ''; }));
         $answers = [trim($_POST['a1'] ?? ''), trim($_POST['a2'] ?? ''), trim($_POST['a3'] ?? '')];
 
-        if (count($question_ids) < SECRET_QUESTIONS_REQUIRED) {
-            $error = 'Please select and answer at least ' . SECRET_QUESTIONS_REQUIRED . ' questions.';
-        } elseif (count($question_ids) !== count(array_unique($question_ids))) {
-            $error = 'Please select three different questions.';
+        $registered_ids = array_map('intval', array_column($registeredQuestions, 'id'));
+        if ($question_ids !== $registered_ids) {
+            $error = 'Please answer the three security questions registered to your account.';
         } else {
             $placeholders = implode(',', array_fill(0, count($question_ids), '?'));
             $stmt3 = $pdo->prepare('SELECT question_id, answer_hash FROM security_answers WHERE user_table = ? AND user_id = ? AND question_id IN (' . $placeholders . ')');
@@ -113,7 +120,7 @@ generate_csrf_token();
             <div class="sq-card">
                 <div class="sq-header">
                     <h2><i class="fas fa-shield-alt" style="color:var(--primary);"></i> Security Questions</h2>
-                    <p>OTP verified. Select the <?php echo SECRET_QUESTIONS_REQUIRED; ?> questions you registered during account creation, then answer them. You need at least <?php echo SECRET_QUESTIONS_MIN_CORRECT; ?> correct.</p>
+                    <p>OTP verified. Answer the three security questions you registered during account creation. You need at least <?php echo SECRET_QUESTIONS_MIN_CORRECT; ?> correct.</p>
                 </div>
 
                 <div class="sq-step-ind">
@@ -131,15 +138,11 @@ generate_csrf_token();
                 <form method="POST" action="" class="sq-body">
                     <?php csrf_token_input(); ?>
 
-                    <?php for ($i = 1; $i <= SECRET_QUESTIONS_REQUIRED; $i++): ?>
+                    <?php for ($i = 1; $i <= 3; $i++): ?>
                     <div class="sq-item">
                         <label><i class="fas fa-question-circle"></i> Question <?php echo $i; ?></label>
-                        <select name="q<?php echo $i; ?>" class="form-control" style="margin-bottom:0.5rem;" required>
-                            <option value="" disabled <?php echo $old_q[$i-1] === '' ? 'selected' : ''; ?>>-- Select a security question --</option>
-                            <?php foreach ($allQuestions as $q): ?>
-                                <option value="<?php echo $q['id']; ?>" <?php echo (string)$q['id'] === (string)$old_q[$i-1] ? 'selected' : ''; ?>><?php echo htmlspecialchars($q['question_text']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="form-control" style="height:auto;min-height:36px;margin-bottom:0.5rem;background:var(--surface);display:flex;align-items:center;"><?php echo htmlspecialchars($registeredQuestions[$i - 1]['question_text']); ?></div>
+                        <input type="hidden" name="q<?php echo $i; ?>" value="<?php echo (int)$registeredQuestions[$i - 1]['id']; ?>">
                         <div style="position:relative;">
                             <input type="password" name="a<?php echo $i; ?>" class="form-control" placeholder="Your answer" value="<?php echo htmlspecialchars($old_a[$i-1]); ?>" style="padding-right:2.5rem;" required>
                             <button type="button" onclick="toggleSq(this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);"><i class="fas fa-eye"></i></button>
@@ -148,7 +151,7 @@ generate_csrf_token();
                     <?php endfor; ?>
 
                     <small style="display:block;text-align:center;color:var(--text-light);font-size:0.75rem;margin-bottom:1rem;">
-                        Pick the questions you registered. You need at least <?php echo SECRET_QUESTIONS_MIN_CORRECT; ?> correct answers out of <?php echo SECRET_QUESTIONS_REQUIRED; ?>.
+                        You need at least <?php echo SECRET_QUESTIONS_MIN_CORRECT; ?> correct answers out of 3.
                     </small>
 
                     <div class="sq-footer">

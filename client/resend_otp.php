@@ -23,23 +23,30 @@ if (empty($_SESSION['otp_user_id']) || empty($_SESSION['otp_purpose'])) {
 }
 
 $user_id = $_SESSION['otp_user_id'];
+$user_table = $_SESSION['otp_user_table'] ?? 'users';
 $purpose = $_SESSION['otp_purpose'];
 
-if (!can_resend_otp($pdo, 'users', $user_id, $purpose)) {
+if (!can_resend_otp($pdo, $user_table, $user_id, $purpose)) {
     echo json_encode(['ok' => false, 'message' => 'Too many requests. Please wait before trying again.']);
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) as full_name, email FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch();
+if ($user_table === 'admin_users') {
+    $stmt = $pdo->prepare("SELECT full_name, email FROM admin_users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch();
+} else {
+    $stmt = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) as full_name, email FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch();
+}
 
 if (!$user) {
-    echo json_encode(['ok' => false, 'message' => 'User not found.']);
+    echo json_encode(['ok' => false, 'message' => 'Account not found.']);
     exit;
 }
 
-$otp = create_otp($pdo, 'users', $user_id, $purpose);
+$otp = create_otp($pdo, $user_table, $user_id, $purpose);
 send_otp_email($user['email'], $otp, $user['full_name']);
 
 echo json_encode(['ok' => true, 'message' => 'OTP resent successfully.']);
